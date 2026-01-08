@@ -5,7 +5,19 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>dual.Infodose Chat Cinematográfico — v2 (cristalizar + painel toggle)</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&amp;display=swap" rel="stylesheet">
-  <style>
+  
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js')
+      .then(() => console.log('Service Worker Registered'));
+  }
+</script>
+  
+<style>
     :root{
       --bg-dark: linear-gradient(to bottom,#000,#1a1a1a);
       --text-dark:#fff; --primary:#111; --secondary:#5e5c5e;
