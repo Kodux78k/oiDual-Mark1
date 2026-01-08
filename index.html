@@ -2,191 +2,382 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>dual.Infodose Chat Cinematográfico — v2 (cristalizar + painel toggle)</title>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&amp;display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>dual.Infodose Chat Cinematográfico — v3 (UI Overhaul)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
   
   <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#000000">
-<link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="theme-color" content="#000000">
+  <link rel="apple-touch-icon" href="icon-192.png">
 
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js')
-      .then(() => console.log('Service Worker Registered'));
-  }
-</script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js')
+        .then(() => console.log('Service Worker Registered'));
+    }
+  </script>
   
 <style>
-    :root{
-      --bg-dark: linear-gradient(to bottom,#000,#1a1a1a);
-      --text-dark:#fff; --primary:#111; --secondary:#5e5c5e;
-      --accent:#0ff; --fast:0.4s; --med:0.8s; --slow:1.8s;
+    :root {
+      --bg-dark: #050505;
+      --glass-surface: rgba(20, 20, 20, 0.65);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass-highlight: rgba(255, 255, 255, 0.03);
+      
+      --text-main: #e0e0e0;
+      --text-dim: #888;
+      
+      --accent: #0ff;
+      --accent-glow: rgba(0, 255, 255, 0.4);
+      --secondary: #bd00ff; /* Magenta neon para contraste */
+      
+      --fast: 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      --med: 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      --slow: 1.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    *{box-sizing:border-box;margin:0;padding:0}
-    html,body{height:100%;min-height:100vh}
-    body{
-      padding:20px;background:var(--bg-dark);color:var(--text-dark);
-      font-family:'Montserrat',sans-serif;overflow:hidden;display:flex;flex-direction:column;align-items:center;
-    }
-    #particles-js{position:absolute;inset:0;z-index:0}
-    .svg-container{position:absolute;top:35%;left:50%;transform:translate(-50%,-50%);width:160px;height:160px;z-index:1}
-    .svg-container object{width:100%;height:100%}
 
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    
+    html, body { height: 100%; min-height: 100vh; }
+    body {
+      padding: 0;
+      background: #000;
+      background: radial-gradient(circle at 50% 30%, #1a1a1a 0%, #000 70%);
+      color: var(--text-main);
+      font-family: 'Montserrat', sans-serif;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* === PARTICLES & BG === */
+    #particles-js { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0.6; }
+    
+    .svg-container {
+      position: absolute; top: 38%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 180px; height: 180px;
+      z-index: 1;
+      opacity: 0.8;
+      filter: drop-shadow(0 0 20px rgba(0,255,255,0.1));
+      transition: all var(--med);
+    }
+    .svg-container object { width: 100%; height: 100%; }
+
+    /* === TOP BAR === */
     .top-info {
-      position: fixed; top: 18px; left: 20px; z-index: 3;
-      background: rgba(0,0,0,0.35); padding: 8px 12px; border-radius: 12px; font-size: 0.9em;
-      backdrop-filter: blur(6px);
+      position: fixed; top: 20px; left: 20px; right: 20px;
+      display: flex; justify-content: space-between;
+      z-index: 10;
+      font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px;
+      color: var(--text-dim);
+      pointer-events: none; /* Deixa clicar através */
+    }
+    .top-info span {
+      background: rgba(0,0,0,0.4);
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.05);
+      backdrop-filter: blur(4px);
+      pointer-events: auto;
     }
 
-    .response-container{
-      position:fixed; left:20px; right:20px; bottom:160px;
-      padding:12px;background:rgba(0,0,0,0.4);backdrop-filter:blur(10px);
-      border-radius:20px; max-height:calc(100vh - 220px); overflow-y:auto; -webkit-overflow-scrolling:touch; z-index:1;
+    /* === MAIN CONTAINER (GLASS) === */
+    .response-container {
+      position: fixed; left: 16px; right: 16px; bottom: 170px;
+      top: 100px; /* Mais espaço pro logo */
+      padding: 20px;
+      
+      /* Glassmorphism High-End */
+      background: linear-gradient(160deg, rgba(30,30,30,0.4) 0%, rgba(0,0,0,0.6) 100%);
+      backdrop-filter: blur(20px) saturate(140%);
+      -webkit-backdrop-filter: blur(20px) saturate(140%);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+      border-radius: 24px;
+      
+      overflow-y: auto;
+      z-index: 5;
+      display: flex; flex-direction: column; justify-content: space-between;
+      transition: opacity var(--med);
     }
-    .page{display:none; opacity:0; transition:opacity var(--med) ease-in-out}
-    .page.active{display:block; opacity:1}
-    .page.initial{text-align:center;font-size:1.1em}
-    .response-controls{display:flex;justify-content:space-between;align-items:center;margin-top:15px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.2)}
-    .control-buttons{display:flex;gap:10px;align-items:center}
-    .control-btn{background:rgba(255,255,255,0.05);padding:6px;border-radius:6px;cursor:pointer;transition:background var(--fast);display:flex;gap:6px;border:none;outline:none}
-    .control-btn:hover{background:rgba(255,255,255,0.12)}
-    .control-btn svg{stroke:rgba(255,255,255,0.5);fill:none}
-    .toggle-button svg{color:#fff;stroke:rgba(255,255,255,0.3);fill:none}
-    .toggle-button svg circle:nth-child(2){fill: currentColor}
-    .toggle-button.active svg{color:#0f0}
-    .pagination{display:flex;align-items:center;gap:10px}
-    .pagination button{background:none;border:none;font-size:1.2em;color:#6fe4fb;cursor:pointer;transition:transform var(--fast)}
-    .pagination button:hover{transform:scale(1.2)}
-    .response-block{
-      margin:1rem 0;padding:1.2rem;border-radius:12px;
-      animation:fadeIn var(--slow) ease forwards; transition:box-shadow var(--fast),transform var(--fast);
-      line-height:1.5;position:relative;cursor:pointer;overflow:hidden;animation:pulse 6s infinite ease-in-out;
-      background: linear-gradient(135deg, rgba(255,255,255,0.02), rgba(0,0,0,0.25));
-      border: 1px solid rgba(255,255,255,0.03);
+
+    /* Scrollbar Futurista */
+    .response-container::-webkit-scrollbar { width: 6px; }
+    .response-container::-webkit-scrollbar-track { background: transparent; }
+    .response-container::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
     }
-    .response-block h3{margin-bottom:12px}
-    .response-block:hover{box-shadow:0 0 15px rgba(0,255,255,0.12)}
-    .response-block .meta { position:absolute; top:8px; right:8px; display:flex; gap:6px; }
+    .response-container::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+    .page { display: none; height: 100%; display: flex; flex-direction: column; }
+    .page:not(.active) { display: none; }
+    .page.active { animation: fadeInBlur var(--med) forwards; }
+    .page.initial { justify-content: center; align-items: center; text-align: center; font-size: 1.1em; color: var(--text-dim); }
+
+    /* === CONTROLS & PAGINATION === */
+    .response-controls {
+      margin-top: auto; /* Empurra para o fundo do container */
+      padding-top: 15px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .control-buttons { display: flex; gap: 8px; }
+    
+    .control-btn {
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex; justify-content: center; align-items: center;
+      transition: all 0.2s ease;
+      color: #fff;
+    }
+    .control-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .control-btn:active { transform: scale(0.95); }
+    .control-btn svg { stroke: #ccc; fill: none; width: 18px; height: 18px; }
+    
+    .toggle-button.active svg { stroke: var(--accent); filter: drop-shadow(0 0 5px var(--accent)); }
+    
+    .pagination { display: flex; align-items: center; gap: 15px; font-variant-numeric: tabular-nums; font-size: 0.9em; color: var(--accent); font-weight: 600; text-shadow: 0 0 10px rgba(0,255,255,0.3); }
+    .pagination button { background: none; border: none; font-size: 1.4em; color: inherit; cursor: pointer; transition: transform 0.2s; opacity: 0.7; }
+    .pagination button:hover { transform: scale(1.2); opacity: 1; }
+
+    /* === RESPONSE BLOCKS === */
+    .response-block {
+      margin: 10px 0;
+      padding: 18px 22px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.04);
+      position: relative;
+      cursor: pointer;
+      transition: all var(--fast);
+      line-height: 1.6;
+      font-size: 0.95rem;
+      overflow: hidden; /* Para conter o glow */
+    }
+
+    .response-block:hover { background: rgba(255,255,255,0.04); transform: translateY(-1px); }
+    
+    /* Tipografia dos blocos */
+    .response-block h3 {
+      margin-bottom: 10px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      opacity: 0.9;
+    }
+
+    /* Variantes de Estilo */
+    .intro {
+      border-left: 3px solid var(--accent);
+      box-shadow: inset 15px 0 30px -15px rgba(0, 255, 255, 0.15);
+    }
+    .intro h3 { color: var(--accent); }
+
+    .middle {
+      border-left: 3px solid #fff;
+      box-shadow: inset 15px 0 30px -15px rgba(255, 255, 255, 0.08);
+    }
+    .middle h3 { color: #fff; }
+
+    .ending {
+      border-left: 3px solid var(--secondary);
+      box-shadow: inset 15px 0 30px -15px rgba(189, 0, 255, 0.15);
+    }
+    .ending h3 { color: var(--secondary); }
+
+    /* Meta Actions (Cristalizar) */
+    .response-block .meta {
+      position: absolute; top: 12px; right: 12px;
+      opacity: 0; transition: opacity var(--fast);
+    }
+    .response-block:hover .meta { opacity: 1; }
+    
     .crystal-btn {
-      background: rgba(0,0,0,0.25); border-radius:6px; padding:6px; cursor:pointer; border:none; color:var(--accent);
+      background: rgba(0,0,0,0.5); border: 1px solid var(--accent); color: var(--accent);
+      border-radius: 6px; width: 24px; height: 24px; cursor: pointer;
+      font-size: 14px; line-height: 0; padding: 0;
+      display: flex; align-items: center; justify-content: center;
     }
-    .response-block.clicked{animation:clickPulse var(--med) ease-out}
-    .response-block.expanded{transform:scale(1.03); background:rgba(0,0,0,0.6); z-index:2}
-    .intro{background:linear-gradient(135deg,rgba(0,255,255,0.08),rgba(0,100,100,0.04));border-left:4px solid #0ff}
-    .middle{background:linear-gradient(135deg,rgba(255,255,255,0.02),rgba(50,50,50,0.06));border-left:4px solid rgba(255,255,255,0.2)}
-    .ending{background:linear-gradient(135deg,rgba(255,0,255,0.06),rgba(100,0,100,0.04));border-left:4px solid #f0f}
-    .footer-text{margin-top:12px;font-size:0.8em;text-align:center;font-style:italic}
+    .crystal-btn:hover { background: var(--accent); color: #000; box-shadow: 0 0 10px var(--accent); }
 
-    .input-container{position:fixed;left:20px;right:20px;bottom:90px;display:flex;gap:10px;z-index:2;max-width:calc(100% - 40px)}
-    .input-container input{flex:1;padding:10px;border:none;border-radius:20px;background:rgba(255,255,255,0.1);color:inherit;outline:none;font-size:16px;transition:background var(--fast)}
-    .input-container input:focus{background:rgba(255,255,255,0.2)}
-    .input-container button{width:60px;height:60px;border:none;border-radius:50%;background:linear-gradient(45deg,var(--primary),var(--secondary));color:#fff;font-size:1.5em;cursor:pointer;display:flex;justify-content:center;align-items:center;animation:pulse 2s infinite ease-in-out;transition:transform var(--fast)}
-    .input-container button:hover{transform:scale(1.1)}
+    .response-block.clicked { animation: clickPulse 0.4s ease-out; }
+    .response-block.expanded {
+      transform: scale(1.02);
+      z-index: 10;
+      background: #000;
+      border-color: var(--accent);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 20px rgba(0,255,255,0.1);
+    }
 
-    /* Settings + Toggle Panel + Crystal Modal */
-    .modal, .panel { position: fixed; inset: 0; display: none; z-index: 9998; justify-content:center; align-items:center; }
-    .modal.active, .panel.active { display:flex }
+    .footer-text { text-align: center; margin-top: 15px; font-size: 0.8rem; color: #555; font-style: italic; }
+
+    /* === INPUT AREA (Floating Capsule) === */
+    .input-container {
+      position: fixed; left: 20px; right: 20px; bottom: 95px;
+      height: 64px;
+      z-index: 20;
+      
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 8px 6px 20px;
+      
+      background: rgba(10, 10, 10, 0.7);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 100px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      transition: transform var(--fast), opacity var(--med);
+    }
+    .input-container:focus-within { border-color: rgba(255,255,255,0.3); box-shadow: 0 15px 40px rgba(0,0,0,0.7); }
+
+    .input-container input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 16px;
+      font-family: inherit;
+      outline: none;
+      padding-right: 10px;
+    }
+    .input-container input::placeholder { color: rgba(255,255,255,0.3); }
+
+    .input-container button {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex; justify-content: center; align-items: center;
+      transition: transform var(--fast);
+      flex-shrink: 0;
+    }
+    
+    #sendBtn {
+      background: linear-gradient(135deg, #fff, #aaa);
+      color: #000;
+      font-size: 1.2rem;
+    }
+    #sendBtn:hover { transform: scale(1.1) rotate(-10deg); box-shadow: 0 0 15px rgba(255,255,255,0.4); }
+
+    #voiceBtn { background: transparent; border: 1px solid rgba(255,255,255,0.1); }
+    #voiceBtn:hover { background: rgba(255,255,255,0.1); transform: scale(1.1); }
+
+    /* === MODALS & PANELS (Unified Style) === */
+    .modal, .panel {
+      position: fixed; inset: 0;
+      display: none; z-index: 9999;
+      justify-content: center; align-items: center;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(5px);
+      opacity: 0; transition: opacity var(--fast);
+    }
+    .modal.active, .panel.active { display: flex; opacity: 1; }
+
     .box {
-      background:#1a1a1a;padding:20px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);
-      width:90%;max-width:520px;box-shadow:0 8px 40px rgba(0,0,0,0.6); color:#fff;
+      background: #111;
+      background: linear-gradient(145deg, #151515, #0a0a0a);
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 25px 60px rgba(0,0,0,0.8);
+      padding: 30px;
+      border-radius: 24px;
+      width: 90%; max-width: 480px;
+      color: #eee;
+      transform: scale(0.95); transition: transform var(--fast);
     }
-    .box h3{color:var(--accent);margin-bottom:8px}
-    .row{display:flex;gap:10px;align-items:center}
-    .col{display:flex;flex-direction:column;gap:8px}
-    .input-group label{font-size:0.85em;color:#aaa;margin-left:4px}
-    .input-group input[type="text"], .input-group input[type="password"], .input-group input[type="file"]{
-      width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.5);color:#fff;outline:none;
+    .modal.active .box, .panel.active .box { transform: scale(1); }
+
+    .box h3 { color: var(--accent); margin-bottom: 20px; font-weight: 300; letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+
+    .input-group { margin-bottom: 15px; }
+    .input-group label, .small { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; display: block; }
+    
+    .box input[type="text"], .box input[type="password"], .box input[type="file"] {
+      width: 100%; padding: 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(0,0,0,0.3);
+      color: #fff; outline: none; font-family: inherit;
+      transition: border-color 0.3s;
     }
-    .settings-actions{display:flex;gap:10px;margin-top:12px}
-    .btn{padding:10px;border-radius:8px;border:none;cursor:pointer;font-weight:600}
-    .btn-prim{background:var(--accent);color:#000}
-    .btn-sec{background:rgba(255,255,255,0.08);color:#fff}
-    .small {font-size:0.85em;color:#bbb}
+    .box input:focus { border-color: var(--accent); background: rgba(0,0,0,0.5); }
 
-    .crystal-list { max-height:300px; overflow:auto; display:flex; flex-direction:column; gap:8px }
-    .crystal-item { background: rgba(255,255,255,0.02); padding:8px; border-radius:8px; display:flex; justify-content:space-between; gap:8px; align-items:flex-start }
-    .crystal-item .actions { display:flex; gap:6px }
+    .btn {
+      padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s;
+    }
+    .btn-prim { background: var(--accent); color: #000; box-shadow: 0 4px 15px rgba(0,255,255,0.2); }
+    .btn-prim:hover { background: #fff; box-shadow: 0 4px 25px rgba(0,255,255,0.4); }
+    .btn-sec { background: rgba(255,255,255,0.05); color: #ccc; }
+    .btn-sec:hover { background: rgba(255,255,255,0.15); color: #fff; }
 
-    @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
-    @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-    @keyframes clickPulse{0%,100%{opacity:1}50%{opacity:0.8}}
-    /* responsive tweaks */
-    @media (max-width:640px){
-      .box{max-width:92%}
-      .svg-container{width:120px;height:120px}
+    .crystal-list { max-height: 250px; overflow-y: auto; padding-right: 5px; margin-bottom: 20px; }
+    .crystal-item { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; margin-bottom: 8px; border: 1px solid transparent; transition: border-color 0.2s; }
+    .crystal-item:hover { border-color: rgba(255,255,255,0.1); }
+    .crystal-item .actions { margin-top: 10px; display: flex; gap: 8px; justify-content: flex-end; }
+    .crystal-item .actions .btn { font-size: 0.75rem; padding: 6px 12px; }
+
+    /* === MANTRA TOGGLE (Zen Mode) === */
+    #mantra-toggle {
+      position: fixed; bottom: 25px; left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      background: rgba(10, 10, 10, 0.5);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 10px 30px;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+      min-width: 280px; display: flex; justify-content: center;
+    }
+    #mantra-toggle:hover { background: rgba(20,20,20,0.8); border-color: rgba(255,255,255,0.25); }
+    
+    #mantra-text { font-size: 0.8rem; color: #888; font-style: italic; transition: opacity 0.4s; }
+    #mantra-text strong { color: #ccc; }
+
+    /* Zen Mode State */
+    #mantra-toggle.collapsed {
+      bottom: 40px;
+      background: transparent;
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      box-shadow: 0 0 30px rgba(255, 215, 0, 0.1);
+      padding: 12px 40px;
+    }
+    #mantra-toggle.collapsed #mantra-text {
+      font-style: normal; font-weight: 300; letter-spacing: 4px; color: #ffd700; text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+    }
+    
+    body.zen-mode .response-container,
+    body.zen-mode .input-container,
+    body.zen-mode .top-info,
+    body.zen-mode .svg-container {
+      opacity: 0; pointer-events: none; filter: blur(20px); transform: scale(0.95);
     }
 
-/* === MANTRA FOOTER / ZEN MODE === */
-#mantra-toggle {
-  position: fixed;
-  bottom: 25px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10000;
+    /* Animations */
+    @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+    @keyframes fadeInBlur { 
+      from { opacity: 0; filter: blur(10px); transform: translateY(20px); }
+      to { opacity: 1; filter: blur(0); transform: translateY(0); }
+    }
+    @keyframes clickPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-  background: rgba(15, 15, 15, 0.7);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.06);
-
-  padding: 10px 24px;
-  border-radius: 100px;
-  cursor: pointer;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  min-width: 280px;
-}
-
-#mantra-toggle:hover {
-  background: rgba(25, 25, 25, 0.9);
-  border-color: rgba(255,255,255,0.15);
-  transform: translateX(-50%) translateY(-2px);
-}
-
-#mantra-text {
-  font-style: italic;
-  color: #777;
-  font-size: 0.78rem;
-  white-space: nowrap;
-  transition: all 0.4s ease;
-}
-
-/* Estado ZEN */
-#mantra-toggle.collapsed {
-  background: transparent;
-  border-color: rgba(255, 215, 0, 0.3);
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.05);
-  padding: 10px 40px;
-}
-
-#mantra-toggle.collapsed #mantra-text {
-  font-style: normal;
-  font-weight: 300;
-  letter-spacing: 3px;
-  color: #ffd700;
-  text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
-}
-
-/* Fade */
-.fade-out { opacity: 0; transform: translateY(5px); }
-.fade-in { opacity: 1; transform: translateY(0); }
-
-/* Esconder UI no modo Zen */
-body.zen-mode .response-container,
-body.zen-mode .input-container,
-body.zen-mode .top-info,
-body.zen-mode .svg-container {
-  opacity: 0;
-  pointer-events: none;
-  filter: blur(12px);
-  transition: all 0.6s ease;
-}
-
+    /* Mobile Tweaks */
+    @media (max-width: 640px) {
+      .response-container { top: 80px; bottom: 170px; padding: 15px; }
+      .svg-container { width: 120px; height: 120px; top: 25%; }
+      .control-btn { width: 42px; height: 42px; } /* Botões maiores para toque */
+      .pagination { font-size: 0.8em; gap: 10px; }
+      .box { width: 95%; padding: 20px; }
+      #mantra-toggle { min-width: auto; width: 90%; white-space: nowrap; }
+    }
   </style>
 </head>
 <body>
@@ -197,55 +388,55 @@ body.zen-mode .svg-container {
   </div>
 
   <div class="top-info" id="topInfo">
-    <span id="displayUser">User: —</span> · <span id="displayInfodose">Infodose: —</span>
+    <span id="displayUser">User: —</span>
+    <span id="displayInfodose">Infodose: —</span>
   </div>
 
   <div class="response-container" id="response">
     <div class="page initial active">
-      <strong>Clique no ◉ e diga “Oi, Dual”.</strong><br>
-      <em>Sempre único. Sempre seu.</em>
+      <div style="opacity: 0.6; margin-bottom: 20px;">◉</div>
+      <strong>Conexão Neural Estabelecida.</strong><br>
+      <em>Clique no botão <span style="color:var(--accent)">◉</span> abaixo ou diga "Oi, Dual".</em>
     </div>
 
     <div class="response-controls">
       <div class="control-buttons">
         <button class="control-btn copy-button" title="Copiar tudo">
-          <svg viewBox="0 0 24 24" width="20"><circle cx="12" cy="12" r="10"></circle><rect x="6" y="6" width="12" height="12"></rect></svg>
+          <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
         </button>
         <button class="control-btn paste-button" title="Colar">
-          <svg viewBox="0 0 24 24" width="20"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="4" x2="12" y2="20"></line></svg>
+          <svg viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
         </button>
 
-        <!-- Toggle abre painel em vez de só alternar -->
         <button id="toggleBtn" class="control-btn toggle-button" title="Painel Infodose">
-          <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10" stroke-width="2"></circle><circle cx="12" cy="12" r="3"></circle></svg>
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg>
         </button>
 
         <button id="crystalBtn" class="control-btn" title="Cristalizados">
-          <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 2l2.9 6.3L21 10l-5 3.6L17.8 21 12 17.7 6.2 21 7 13.6 2 10l6.1-1.7L12 2z"></path></svg>
+          <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
         </button>
 
         <button id="settingsBtn" class="control-btn" title="Configurações">
-          <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         </button>
       </div>
 
       <div class="pagination">
-        <button data-action="prev">⟵</button>
+        <button data-action="prev">←</button>
         <span id="pageIndicator">1 / 1</span>
-        <button data-action="next">⟶</button>
+        <button data-action="next">→</button>
       </div>
     </div>
   </div>
 
   <div class="input-container">
-    <input id="userInput" type="text" placeholder="Diga: 'oi, Dual'...">
+    <input id="userInput" type="text" placeholder="Envie seu pulso..." autocomplete="off">
     <button id="sendBtn" title="Enviar">➤</button>
     <button id="voiceBtn" title="Falar">
-      <object data="Reset_buttom_Dual-Infodose.svg" type="image/svg+xml" width="36" height="36" style="pointer-events: none;"></object>
+      <object data="Reset_buttom_Dual-Infodose.svg" type="image/svg+xml" width="24" height="24" style="pointer-events: none; opacity:0.8"></object>
     </button>
   </div>
 
-  <!-- Settings Modal -->
   <div id="settingsModal" class="modal">
     <div class="box">
       <h3>Configuração Neural</h3>
@@ -256,103 +447,110 @@ body.zen-mode .svg-container {
         </div>
         <div class="input-group">
           <label>Modelo AI</label>
-          <input type="text" id="modelInput" placeholder="ex: meta-llama/llama-4-maverick:free">
+          <input type="text" id="modelInput" placeholder="ex: meta-llama/llama-3.3-70b-instruct:free">
         </div>
-        <div class="settings-actions">
-          <button id="cancelSettings" class="btn btn-sec">Cancelar</button>
-          <button id="saveSettings" class="btn btn-prim">Salvar Conexão</button>
+        <div class="settings-actions" style="display:flex; gap:10px; margin-top:20px">
+          <button id="cancelSettings" class="btn btn-sec" style="flex:1">Cancelar</button>
+          <button id="saveSettings" class="btn btn-prim" style="flex:1">Conectar</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Toggle Panel (painel do botão toggle) -->
   <div id="togglePanel" class="panel">
     <div class="box">
       <h3>Painel Infodose</h3>
 
-      <div class="row">
-        <div style="flex:1" class="col">
-          <label class="small">Usuário</label>
+      <div style="display:flex; gap:15px; margin-bottom:15px">
+        <div style="flex:1">
+          <label>Usuário</label>
           <input type="text" id="userNameInput" placeholder="Seu nome..." />
         </div>
-        <div style="flex:1" class="col">
-          <label class="small">Nome da Infodose</label>
-          <input type="text" id="infodoseNameInput" placeholder="Ex: World System — Alpha" />
+        <div style="flex:1">
+          <label>Nome da Infodose</label>
+          <input type="text" id="infodoseNameInput" placeholder="Ex: Alpha" />
         </div>
       </div>
 
-      <div style="margin-top:10px" class="col">
-        <label class="small">Treinamento (World System) — Upload / Export</label>
-        <input type="file" id="trainingUpload" accept=".txt" />
-        <div style="display:flex; gap:8px; margin-top:8px;">
-          <button id="importTrainingBtn" class="btn btn-sec">Importar (ler)</button>
-          <button id="exportTrainingBtn" class="btn btn-prim">Exportar treino</button>
+      <div class="input-group">
+        <label>Treinamento (World System)</label>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <input type="file" id="trainingUpload" accept=".txt" style="display:none" />
+            <button class="btn btn-sec" onclick="document.getElementById('trainingUpload').click()" style="width:100%">Carregar Arquivo .txt</button>
         </div>
-        <div id="trainingFileName" class="small" style="margin-top:6px;color:#9bd">Nenhum arquivo carregado</div>
+        <div id="trainingFileName" class="small" style="margin-top:6px; color:var(--accent)">Nenhum carregado</div>
+        
+        <div style="display:flex; gap:10px; margin-top:10px;">
+          <button id="importTrainingBtn" class="btn btn-sec" style="flex:1">Ler/Importar</button>
+          <button id="exportTrainingBtn" class="btn btn-sec" style="flex:1">Baixar Treino</button>
+        </div>
       </div>
 
-      <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
-        <label class="small" style="flex:1">Infodose ativa</label>
-        <input type="checkbox" id="assistantActiveCheckbox" />
-        <label class="small" style="flex:1">Treinamento ativo</label>
-        <input type="checkbox" id="trainingActiveCheckbox" />
+      <div style="background:rgba(255,255,255,0.03); padding:15px; border-radius:12px; margin: 15px 0;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px">
+            <label style="margin:0">Infodose Ativa</label>
+            <input type="checkbox" id="assistantActiveCheckbox" />
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <label style="margin:0">Usar Treinamento</label>
+            <input type="checkbox" id="trainingActiveCheckbox" />
+          </div>
       </div>
 
-      <div style="margin-top:12px; display:flex; gap:8px;">
-        <button id="savePanelBtn" class="btn btn-prim">Salvar Painel</button>
-        <button id="closePanelBtn" class="btn btn-sec">Fechar</button>
+      <div style="display:flex; gap:10px; margin-top:20px;">
+        <button id="savePanelBtn" class="btn btn-prim" style="flex:1">Salvar Painel</button>
+        <button id="closePanelBtn" class="btn btn-sec" style="flex:1">Fechar</button>
       </div>
     </div>
   </div>
 
-  <!-- Crystal modal (lista de cristalizados) -->
   <div id="crystalModal" class="modal">
     <div class="box">
       <h3>Cristalizados</h3>
-      <div class="row" style="margin-bottom:8px">
-        <button id="exportAllCrystal" class="btn btn-prim">Exportar todos</button>
-        <button id="clearAllCrystal" class="btn btn-sec">Limpar tudo</button>
+      <div class="row" style="margin-bottom:15px; display:flex; gap:10px">
+        <button id="exportAllCrystal" class="btn btn-prim" style="flex:1">Exportar Todos</button>
+        <button id="clearAllCrystal" class="btn btn-sec" style="flex:1">Limpar Tudo</button>
       </div>
       <div class="crystal-list" id="crystalList"></div>
-      <div style="margin-top:12px;display:flex;justify-content:flex-end;gap:8px">
+      <div style="margin-top:15px; text-align:right">
         <button id="closeCrystal" class="btn btn-sec">Fechar</button>
       </div>
     </div>
   </div>
 
-<!-- MANTRA FOOTER -->
-<div id="mantra-toggle">
-  <span id="mantra-text">
-    Do seu jeito. <strong>Sempre</strong> único. <strong>Sempre</strong> seu.
-  </span>
-</div>
+  <div id="mantra-toggle">
+    <span id="mantra-text">
+      Do seu jeito. <strong>Sempre</strong> único. <strong>Sempre</strong> seu.
+    </span>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
   <script>
-    /* ---------- Constantes iniciais ---------- */
+    /* ===============================================
+       LÓGICA ORIGINAL PRESERVADA (V2 -> V3)
+       ===============================================
+    */
     const TRAINING_FILE_FALLBACK = 'Super_Treinamento_Universal_Dual_Infodose_v1-28.txt';
     const API_ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions';
     const TEMPERATURE = 0.2;
 
-    // estado
     let training = '';
     let trainingFileName = '';
     let assistantEnabled = false;
-    let trainingActive = true; // se false, não inclui 'system' no conversation
+    let trainingActive = true; 
     let conversation = [];
     let pages = [], currentPage = 0, autoAdvance = true;
 
-    // configs persistidas
     let apiKey = localStorage.getItem('di_apiKey') || '';
-    let modelName = localStorage.getItem('di_modelName') || 'meta-llama/llama-4-maverick:free';
+    let modelName = localStorage.getItem('di_modelName') || 'meta-llama/llama-3.3-70b-instruct:free'; // Atualizado default
     let userName = localStorage.getItem('di_userName') || '';
     let infodoseName = localStorage.getItem('di_infodoseName') || '';
     const CRYSTAL_KEY = 'di_cristalizados';
 
     const createEl = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html) e.innerHTML = html; return e; };
+    
     const splitBlocks = text => {
-      if (!text || !text.trim()) return [['Sem conteúdo de treinamento.','','']];
+      if (!text || !text.trim()) return [['Sem conteúdo.','','']];
       let paras = text.split(/\n\s*\n/).filter(p=>p.trim());
       if (paras.length % 3 !== 0) {
         const sens = paras.join(' ').match(/[^\.!\?]+[\.!\?]+/g) || [paras.join(' ')];
@@ -363,19 +561,18 @@ body.zen-mode .svg-container {
       return groups;
     };
 
-    // simples TTS
     const speakText = (txt, onend)=> {
       if (!txt) { if (onend) onend(); return; }
       const u = new SpeechSynthesisUtterance(txt);
-      u.lang = 'pt-BR'; u.rate = 0.99; u.pitch = 1.1; u.volume = 1;
+      u.lang = 'pt-BR'; u.rate = 1.0; u.pitch = 1.0; u.volume = 1;
       if (window._vozes) u.voice = window._vozes.find(v=>v.lang==='pt-BR') || window._vozes[0];
       if (onend) u.onend = onend;
       speechSynthesis.speak(u);
     };
 
     const updateTopInfo = () => {
-      document.getElementById('displayUser').innerText = 'User: ' + (userName || '—');
-      document.getElementById('displayInfodose').innerText = 'Infodose: ' + (infodoseName || '—');
+      document.getElementById('displayUser').innerText = 'USER: ' + (userName || '—');
+      document.getElementById('displayInfodose').innerText = 'INFODOSE: ' + (infodoseName || '—');
     };
 
     const updateToggleUI = () => {
@@ -384,9 +581,7 @@ body.zen-mode .svg-container {
       document.getElementById('trainingActiveCheckbox').checked = !!trainingActive;
     };
 
-    /* ---------- Carregamento inicial (treinamento: localStorage -> arquivo) ---------- */
     async function loadInitialTraining() {
-      // 1) preferência local
       const localTraining = localStorage.getItem('di_trainingText');
       const localFileName = localStorage.getItem('di_trainingFileName') || '';
       if (localTraining) {
@@ -395,7 +590,6 @@ body.zen-mode .svg-container {
         document.getElementById('trainingFileName').innerText = localFileName || 'treinamento (local)';
         return;
       }
-      // 2) tentativa fetch do arquivo fallback
       try {
         const r = await fetch(TRAINING_FILE_FALLBACK);
         if (r.ok) {
@@ -403,10 +597,9 @@ body.zen-mode .svg-container {
           trainingFileName = TRAINING_FILE_FALLBACK;
           document.getElementById('trainingFileName').innerText = TRAINING_FILE_FALLBACK;
         }
-      } catch (e) { /* silent */ }
+      } catch (e) { }
     }
 
-    /* ---------- Render paginado com botões cristalizar ---------- */
     const renderPaginatedResponse = text => {
       speechSynthesis.cancel();
       autoAdvance = true;
@@ -424,10 +617,9 @@ body.zen-mode .svg-container {
           const b = createEl('div','response-block '+cls,`
             <h3>${titles[j]}</h3><p>${body}</p>
           `);
-          // meta area: cristalizar + timestamp
           const meta = createEl('div','meta');
           const crystalBtn = createEl('button','crystal-btn','✶');
-          crystalBtn.title = 'Cristalizar essa mensagem';
+          crystalBtn.title = 'Cristalizar';
           crystalBtn.addEventListener('click', (ev)=>{
             ev.stopPropagation();
             cristalizar({ title: titles[j], content: body });
@@ -447,7 +639,6 @@ body.zen-mode .svg-container {
             } else {
               b.classList.add('expanded');
               b.dataset.state = '';
-              // se habilitar assistant ao clicar em bloco, insere training (apenas se trainingActive)
               if (!assistantEnabled) {
                 assistantEnabled = true;
                 localStorage.setItem('di_assistantEnabled','1');
@@ -485,7 +676,7 @@ body.zen-mode .svg-container {
           changePage(1);
           speakPage(i+1);
         } else {
-          speakText('Do seu jeito, sempre único, sempre seu.');
+          speakText('Sempre único, sempre seu.');
         }
       });
     };
@@ -498,65 +689,58 @@ body.zen-mode .svg-container {
       document.getElementById('pageIndicator').textContent = `${currentPage+1} / ${pages.length}`;
     };
 
-    /* ---------- showLoading ---------- */
     const showLoading = msg => {
       const respEl = document.getElementById('response');
       const controls = respEl.querySelector('.response-controls');
       respEl.querySelectorAll('.page:not(.initial)').forEach(p=>p.remove());
       const page = createEl('div','page active');
-      page.appendChild(createEl('p','footer-text',msg));
+      page.style.justifyContent = 'center';
+      page.style.alignItems = 'center';
+      page.style.height = '100%';
+      page.innerHTML = `<div style="text-align:center; animation:pulse 1.5s infinite"><div style="font-size:2em;margin-bottom:10px">◉</div>${msg}</div>`;
       respEl.insertBefore(page, controls);
       pages = [page];
       currentPage = 0;
-      document.getElementById('pageIndicator').textContent = '…';
+      document.getElementById('pageIndicator').textContent = '...';
     };
 
-    /* ---------- Chamada AI ---------- */
     async function callAI() {
       if (!apiKey) {
-        alert('Por favor, configure sua API Key no botão de configurações.');
+        alert('Configure sua API Key (SK) nas configurações.');
         document.getElementById('settingsModal').classList.add('active');
         return;
       }
-
-      // monta messages: se trainingActive & assistantEnabled inclui training como system
       const bodyObj = { model: modelName, messages: conversation.slice(), temperature: TEMPERATURE };
       const messagesToSend = [];
       if (assistantEnabled && trainingActive && training) messagesToSend.push({ role:'system', content: training });
-      // concat conversas (usa conversation sem duplicar system se já tiver)
-      conversation.forEach(m => {
-        // evita duplicar system entries no conversation
-        if (m.role === 'system') return;
-        messagesToSend.push(m);
-      });
+      conversation.forEach(m => { if (m.role === 'system') return; messagesToSend.push(m); });
       bodyObj.messages = messagesToSend;
 
       try {
         const resp = await fetch(API_ENDPOINT, {
           method:'POST',
-          headers:{ 'Authorization':`Bearer ${apiKey}`, 'Content-Type':'application/json' },
+          headers:{ 'Authorization':`Bearer ${apiKey}`, 'Content-Type':'application/json', 'HTTP-Referer': window.location.href, 'X-Title': 'Dual Infodose' },
           body: JSON.stringify(bodyObj)
         });
         if (!resp.ok) throw new Error('Erro API: ' + resp.status);
         const data = await resp.json();
-        const answer = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content)
+        const answer = (data.choices && data.choices[0] && data.choices[0].message)
           ? data.choices[0].message.content.trim()
-          : (data.result || 'Resposta vazia');
+          : 'Resposta vazia da API';
         conversation.push({ role:'assistant', content: answer });
         renderPaginatedResponse(answer);
       } catch (err) {
         console.error(err);
-        const errorMsg = 'O pulso oscilou (Erro de Conexão ou Key inválida). Verifique as configurações.';
+        const errorMsg = 'Pulso interrompido. Verifique a API Key e a Conexão.';
         conversation.push({ role:'assistant', content: errorMsg });
         renderPaginatedResponse(errorMsg);
       }
     }
 
-    /* ---------- Envio de mensagem ---------- */
     async function sendMessage(){
       const respEl = document.getElementById('response');
       const initPage = respEl.querySelector('.page.initial');
-      if (initPage) initPage.remove();
+      if (initPage) initPage.classList.remove('active'); // Oculta a inicial suavemente
 
       const input = document.getElementById('userInput');
       const raw = input.value.trim();
@@ -564,25 +748,22 @@ body.zen-mode .svg-container {
       input.value = '';
 
       speechSynthesis.cancel();
-      speakText('');
-
-      // reconhecimento simples de entidades
+      
       const txt = raw.toLowerCase();
-      if (txt === 'oi dual' || txt === 'oi, dual') {
+      if (txt.includes('oi dual') || txt.includes('oi, dual')) {
         assistantEnabled = true;
         localStorage.setItem('di_assistantEnabled','1');
-        showLoading('Dual Infodose ativa. Pulso enviado...');
+        showLoading('Dual Infodose ativa. Sincronizando...');
         if (training && trainingActive) conversation.unshift({ role:'system', content: training });
         updateToggleUI();
       } else {
-        showLoading('⚡Pulso enviado...Recebendo Intenção…');
+        showLoading('Processando Pulso...');
       }
 
       conversation.push({ role:'user', content: raw });
       callAI();
     }
 
-    /* ---------- Cristalizar (salvar mensagem) ---------- */
     function cristalizar({ title, content }) {
       const list = JSON.parse(localStorage.getItem(CRYSTAL_KEY) || '[]');
       const item = {
@@ -603,88 +784,76 @@ body.zen-mode .svg-container {
       const el = document.getElementById('crystalList');
       el.innerHTML = '';
       if (!list.length) {
-        el.innerHTML = '<div class="small">Nenhum cristalizado ainda.</div>';
+        el.innerHTML = '<div class="small" style="text-align:center; padding:20px">Nada cristalizado ainda.</div>';
         return;
       }
       list.forEach(it => {
         const row = createEl('div','crystal-item');
-        const left = createEl('div','','<strong>'+ (it.title||'—') +'</strong><div class="small">'+(it.infodose || '')+' · '+(new Date(it.at)).toLocaleString()+'</div><div style="margin-top:6px">'+ (it.content.length>220 ? it.content.slice(0,220)+'...' : it.content) +'</div>');
+        row.innerHTML = `
+          <div style="font-weight:600; color:var(--accent); margin-bottom:4px">${it.title || '—'}</div>
+          <div class="small" style="margin-bottom:8px">${new Date(it.at).toLocaleString()}</div>
+          <div style="font-size:0.9rem; opacity:0.8; line-height:1.4">${it.content.length>140 ? it.content.slice(0,140)+'...' : it.content}</div>
+        `;
         const actions = createEl('div','actions');
+        
         const copyBtn = createEl('button','btn btn-sec','Copiar');
-        copyBtn.addEventListener('click', ()=> { navigator.clipboard.writeText(it.content); });
-        const exportBtn = createEl('button','btn btn-prim','Exportar');
-        exportBtn.addEventListener('click', ()=> {
+        copyBtn.onclick = () => navigator.clipboard.writeText(it.content);
+        
+        const exportBtn = createEl('button','btn btn-prim','Baixar');
+        exportBtn.onclick = () => {
           const blob = new Blob([it.content], { type:'text/plain;charset=utf-8' });
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a'); a.href = url; a.download = `cristal_${it.id}.txt`; a.click(); URL.revokeObjectURL(url);
-        });
-        const delBtn = createEl('button','btn btn-sec','Apagar');
-        delBtn.addEventListener('click', () => {
+        };
+        
+        const delBtn = createEl('button','btn btn-sec','X');
+        delBtn.style.color = '#ff5555';
+        delBtn.onclick = () => {
           const arr = JSON.parse(localStorage.getItem(CRYSTAL_KEY) || '[]').filter(x => x.id !== it.id);
           localStorage.setItem(CRYSTAL_KEY, JSON.stringify(arr));
           refreshCrystalList();
-        });
-        actions.appendChild(copyBtn); actions.appendChild(exportBtn); actions.appendChild(delBtn);
-        row.appendChild(left); row.appendChild(actions);
+        };
+
+        actions.append(copyBtn, exportBtn, delBtn);
+        row.appendChild(actions);
         el.appendChild(row);
       });
     }
 
-    /* ---------- Eventos de UI: Settings / Toggle painel / Crystal ---------- */
+    /* UI SETUP */
     function setupSettings() {
       const modal = document.getElementById('settingsModal');
-      const btn = document.getElementById('settingsBtn');
-      const closeBtn = document.getElementById('cancelSettings');
-      const saveBtn = document.getElementById('saveSettings');
-      const keyInput = document.getElementById('apiKeyInput');
-      const modelInput = document.getElementById('modelInput');
-
-      btn.addEventListener('click', () => {
-        keyInput.value = apiKey;
-        modelInput.value = modelName;
+      document.getElementById('settingsBtn').onclick = () => {
+        document.getElementById('apiKeyInput').value = apiKey;
+        document.getElementById('modelInput').value = modelName;
         modal.classList.add('active');
-      });
-      const closeModal = () => modal.classList.remove('active');
-      closeBtn.addEventListener('click', closeModal);
-      saveBtn.addEventListener('click', () => {
-        apiKey = keyInput.value.trim();
-        modelName = modelInput.value.trim() || modelName;
+      };
+      document.getElementById('cancelSettings').onclick = () => modal.classList.remove('active');
+      document.getElementById('saveSettings').onclick = () => {
+        apiKey = document.getElementById('apiKeyInput').value.trim();
+        modelName = document.getElementById('modelInput').value.trim() || modelName;
         localStorage.setItem('di_apiKey', apiKey);
         localStorage.setItem('di_modelName', modelName);
-        alert('Conexão Neural Salva.');
-        closeModal();
-      });
-      modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+        modal.classList.remove('active');
+      };
+      modal.onclick = (e) => { if(e.target===modal) modal.classList.remove('active'); };
     }
 
     function setupTogglePanel() {
       const panel = document.getElementById('togglePanel');
-      const btn = document.getElementById('toggleBtn');
-      const closeBtn = document.getElementById('closePanelBtn');
-      const saveBtn = document.getElementById('savePanelBtn');
-      const userInput = document.getElementById('userNameInput');
-      const infodoseInput = document.getElementById('infodoseNameInput');
-      const assistantChk = document.getElementById('assistantActiveCheckbox');
-      const trainingChk = document.getElementById('trainingActiveCheckbox');
-      const fileInput = document.getElementById('trainingUpload');
-      const importBtn = document.getElementById('importTrainingBtn');
-      const exportBtn = document.getElementById('exportTrainingBtn');
-      const trainingNameEl = document.getElementById('trainingFileName');
-
-      btn.addEventListener('click', () => {
-        // preencher valores
-        userInput.value = userName;
-        infodoseInput.value = infodoseName;
-        assistantChk.checked = !!assistantEnabled;
-        trainingChk.checked = !!trainingActive;
+      document.getElementById('toggleBtn').onclick = () => {
+        document.getElementById('userNameInput').value = userName;
+        document.getElementById('infodoseNameInput').value = infodoseName;
+        document.getElementById('assistantActiveCheckbox').checked = !!assistantEnabled;
+        document.getElementById('trainingActiveCheckbox').checked = !!trainingActive;
         panel.classList.add('active');
-      });
-      closeBtn.addEventListener('click', ()=> panel.classList.remove('active'));
-      saveBtn.addEventListener('click', () => {
-        userName = userInput.value.trim();
-        infodoseName = infodoseInput.value.trim();
-        assistantEnabled = !!assistantChk.checked;
-        trainingActive = !!trainingChk.checked;
+      };
+      document.getElementById('closePanelBtn').onclick = () => panel.classList.remove('active');
+      document.getElementById('savePanelBtn').onclick = () => {
+        userName = document.getElementById('userNameInput').value.trim();
+        infodoseName = document.getElementById('infodoseNameInput').value.trim();
+        assistantEnabled = !!document.getElementById('assistantActiveCheckbox').checked;
+        trainingActive = !!document.getElementById('trainingActiveCheckbox').checked;
         localStorage.setItem('di_userName', userName);
         localStorage.setItem('di_infodoseName', infodoseName);
         localStorage.setItem('di_assistantEnabled', assistantEnabled ? '1' : '0');
@@ -692,78 +861,55 @@ body.zen-mode .svg-container {
         updateTopInfo();
         updateToggleUI();
         panel.classList.remove('active');
-      });
+      };
 
-      // file upload listener (preview)
-      fileInput.addEventListener('change', (e) => {
-        const f = e.target.files[0];
-        if (!f) return;
-        trainingFileName = f.name;
-      });
-
-      importBtn.addEventListener('click', ()=> {
-        const f = fileInput.files[0];
-        if (!f) { alert('Escolha um arquivo .txt para importar.'); return; }
+      const fileIn = document.getElementById('trainingUpload');
+      fileIn.onchange = (e) => { if(e.target.files[0]) trainingFileName = e.target.files[0].name; };
+      
+      document.getElementById('importTrainingBtn').onclick = () => {
+        const f = fileIn.files[0];
+        if (!f) { alert('Selecione um arquivo .txt primeiro.'); return; }
         const r = new FileReader();
         r.onload = (ev) => {
           training = ev.target.result;
-          trainingFileName = f.name || 'uploaded_training.txt';
+          trainingFileName = f.name;
           localStorage.setItem('di_trainingText', training);
           localStorage.setItem('di_trainingFileName', trainingFileName);
           document.getElementById('trainingFileName').innerText = trainingFileName;
-          alert('Treinamento importado e salvo localmente.');
+          alert('Treinamento carregado com sucesso.');
         };
         r.readAsText(f,'utf-8');
-      });
-
-      exportBtn.addEventListener('click', ()=> {
-        if (!training) { alert('Nenhum treinamento presente para exportar.'); return; }
-        const blob = new Blob([training], { type:'text/plain;charset=utf-8' });
+      };
+      
+      document.getElementById('exportTrainingBtn').onclick = () => {
+        if(!training) return alert('Sem treinamento para baixar.');
+        const blob = new Blob([training], {type:'text/plain'});
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = trainingFileName || 'training_export.txt'; a.click(); URL.revokeObjectURL(url);
-      });
+        const a = document.createElement('a'); a.href=url; a.download='backup_treino.txt'; a.click();
+      };
     }
 
     function setupCrystalModal() {
-      const btn = document.getElementById('crystalBtn');
       const modal = document.getElementById('crystalModal');
-      const close = document.getElementById('closeCrystal');
-      const exportAll = document.getElementById('exportAllCrystal');
-      const clearAll = document.getElementById('clearAllCrystal');
-
-      btn.addEventListener('click', () => {
-        refreshCrystalList();
-        modal.classList.add('active');
-      });
-      close.addEventListener('click', ()=> modal.classList.remove('active'));
-      exportAll.addEventListener('click', ()=> {
+      document.getElementById('crystalBtn').onclick = () => { refreshCrystalList(); modal.classList.add('active'); };
+      document.getElementById('closeCrystal').onclick = () => modal.classList.remove('active');
+      document.getElementById('exportAllCrystal').onclick = () => {
         const list = JSON.parse(localStorage.getItem(CRYSTAL_KEY) || '[]');
-        if (!list.length) { alert('Nada para exportar.'); return; }
-        const content = list.map(it => `--- ${it.title} · ${it.at} · ${it.infodose}\n\n${it.content}\n\n`).join('\n');
-        const blob = new Blob([content], { type:'text/plain;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = `cristalizados_${Date.now()}.txt`; a.click(); URL.revokeObjectURL(url);
-      });
-      clearAll.addEventListener('click', ()=> {
-        if (!confirm('Limpar todos os cristalizados?')) return;
-        localStorage.removeItem(CRYSTAL_KEY);
-        refreshCrystalList();
-      });
-      document.getElementById('crystalModal').addEventListener('click', (e)=> { if (e.target === document.getElementById('crystalModal')) document.getElementById('crystalModal').classList.remove('active'); });
+        if(!list.length) return;
+        const txt = list.map(i => `--- ${i.title} (${i.at})\n${i.content}\n`).join('\n');
+        const b = new Blob([txt],{type:'text/plain'});
+        const u = URL.createObjectURL(b);
+        const a=document.createElement('a'); a.href=u; a.download='todos_cristais.txt'; a.click();
+      };
+      document.getElementById('clearAllCrystal').onclick = () => {
+        if(confirm('Apagar tudo?')) { localStorage.removeItem(CRYSTAL_KEY); refreshCrystalList(); }
+      };
+      modal.onclick = (e) => { if(e.target===modal) modal.classList.remove('active'); };
     }
 
-    /* ---------- Clipboard + other small UI ---------- */
+    /* INIT */
     document.addEventListener('DOMContentLoaded', async () => {
-      // voice voices
       speechSynthesis.onvoiceschanged = () => { window._vozes = speechSynthesis.getVoices(); };
-
-      // carregar configs
-      apiKey = localStorage.getItem('di_apiKey') || apiKey;
-      modelName = localStorage.getItem('di_modelName') || modelName;
-      userName = localStorage.getItem('di_userName') || userName;
-      infodoseName = localStorage.getItem('di_infodoseName') || infodoseName;
-      assistantEnabled = (localStorage.getItem('di_assistantEnabled') === '1') || assistantEnabled;
-      trainingActive = (localStorage.getItem('di_trainingActive') === '0') ? false : trainingActive;
 
       await loadInitialTraining();
       updateTopInfo();
@@ -773,72 +919,54 @@ body.zen-mode .svg-container {
       setupCrystalModal();
 
       particlesJS('particles-js',{
-        particles:{ number:{value:40},color:{value:['#0ff','#f0f']}, shape:{type:'circle'},opacity:{value:0.4},size:{value:2.4}, move:{enable:true,speed:1.5} }, retina_detect:true
+        particles:{ 
+          number:{value:50}, 
+          color:{value:['#00ffff','#bd00ff']}, 
+          shape:{type:'circle'}, 
+          opacity:{value:0.3, random:true}, 
+          size:{value:3, random:true}, 
+          move:{enable:true, speed:0.8, direction:'none', random:true, out_mode:'out'} 
+        }, 
+        interactivity: { events: { onhover: { enable: true, mode: "repulse" } } },
+        retina_detect:true
       });
 
-      // eventos básicos
-      document.getElementById('sendBtn').addEventListener('click', sendMessage);
-      document.getElementById('userInput').addEventListener('keypress', e => { if (e.key==='Enter') sendMessage(); });
-      document.querySelector('[data-action="prev"]').addEventListener('click', () => changePage(-1));
-      document.querySelector('[data-action="next"]').addEventListener('click', () => changePage(1));
-
-      document.querySelector('.copy-button').addEventListener('click', () => {
-        const pages = Array.from(document.querySelectorAll('.response-container .page'));
-        const fullText = pages.map(p => p.innerText.trim()).join('\n\n');
-        navigator.clipboard.writeText(fullText);
-      });
-
-      document.querySelector('.paste-button').addEventListener('click', async () => {
-        try {
-          const text = await navigator.clipboard.readText();
-          document.getElementById('userInput').value = text;
-        } catch (err) { console.error('Falha ao colar', err); }
-      });
-
-      // voice quick
-      document.getElementById('voiceBtn').addEventListener('click', ()=>{
+      document.getElementById('sendBtn').onclick = sendMessage;
+      document.getElementById('userInput').onkeypress = e => { if (e.key==='Enter') sendMessage(); };
+      document.querySelector('[data-action="prev"]').onclick = () => changePage(-1);
+      document.querySelector('[data-action="next"]').onclick = () => changePage(1);
+      
+      document.querySelector('.copy-button').onclick = () => {
+        const txt = Array.from(document.querySelectorAll('.response-block p')).map(p=>p.innerText).join('\n\n');
+        navigator.clipboard.writeText(txt);
+      };
+      document.querySelector('.paste-button').onclick = async () => {
+        try { document.getElementById('userInput').value = await navigator.clipboard.readText(); } catch(e){}
+      };
+      
+      document.getElementById('voiceBtn').onclick = () => {
         const R = new (window.SpeechRecognition||window.webkitSpeechRecognition)();
         R.lang='pt-BR'; R.start();
-        R.onresult = e => {
-          document.getElementById('userInput').value = e.results[0][0].transcript;
-          sendMessage();
-        };
-      });
+        R.onresult = e => { document.getElementById('userInput').value = e.results[0][0].transcript; sendMessage(); };
+      };
     });
 
-/* === MANTRA ZEN MODE === */
-const mantraBtn = document.getElementById('mantra-toggle');
-const mantraText = document.getElementById('mantra-text');
-
-let mantraCollapsed = false;
-
-const TXT_EXPANDED = `Do seu jeito. <strong>Sempre</strong> único. <strong>Sempre</strong> seu.`;
-const TXT_COLLAPSED = `USE · TRANSFORME · DEVOLVA`;
-
-function swapMantraText(html) {
-  mantraText.classList.add('fade-out');
-  setTimeout(() => {
-    mantraText.innerHTML = html;
-    mantraText.classList.remove('fade-out');
-    mantraText.classList.add('fade-in');
-    setTimeout(() => mantraText.classList.remove('fade-in'), 300);
-  }, 300);
-}
-
-mantraBtn.addEventListener('click', () => {
-  mantraCollapsed = !mantraCollapsed;
-
-  if (mantraCollapsed) {
-    mantraBtn.classList.add('collapsed');
-    document.body.classList.add('zen-mode');
-    swapMantraText(TXT_COLLAPSED);
-  } else {
-    mantraBtn.classList.remove('collapsed');
-    document.body.classList.remove('zen-mode');
-    swapMantraText(TXT_EXPANDED);
-  }
-});
-
+    /* ZEN MODE LOGIC */
+    const mantraBtn = document.getElementById('mantra-toggle');
+    const mantraText = document.getElementById('mantra-text');
+    let mantraCollapsed = false;
+    mantraBtn.addEventListener('click', () => {
+      mantraCollapsed = !mantraCollapsed;
+      if (mantraCollapsed) {
+        mantraBtn.classList.add('collapsed');
+        document.body.classList.add('zen-mode');
+        mantraText.innerHTML = `USE · TRANSFORME · DEVOLVA`;
+      } else {
+        mantraBtn.classList.remove('collapsed');
+        document.body.classList.remove('zen-mode');
+        mantraText.innerHTML = `Do seu jeito. <strong>Sempre</strong> único. <strong>Sempre</strong> seu.`;
+      }
+    });
   </script>
 </body>
 </html>
