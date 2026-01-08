@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>dual.Infodose Chat — v3.1 (Sincronização Cristal + Dropdown Rápido)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&amp;display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg-dark: linear-gradient(to bottom,#000,#1a1a1a);
+      --text-dark:#fff; --primary:#111; --secondary:#5e5c5e;
+      --accent:#0ff; --gold:#ffd700; --success:#0f0;
+      --fast:0.4s; --med:0.8s; --slow:1.8s;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;min-height:100vh}
+    body{
+      padding:20px;background:var(--bg-dark);color:var(--text-dark);
+      font-family:'Montserrat',sans-serif;overflow:hidden;display:flex;flex-direction:column;align-items:center;
+    }
+    #particles-js{position:absolute;inset:0;z-index:0}
+    .svg-container{position:absolute;top:35%;left:50%;transform:translate(-50%,-50%);width:160px;height:160px;z-index:1}
+    .svg-container object{width:100%;height:100%}
+
+    .top-info {
+      position: fixed; top: 18px; left: 20px; z-index: 3;
+      background: rgba(0,0,0,0.35); padding: 8px 12px; border-radius: 12px; font-size: 0.85em;
+      backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.05);
+      display: flex; gap: 15px; align-items:center;
+    }
+    .top-info span { opacity: 0.95; }
+    .top-info select { background: rgba(255,255,255,0.03); color: #fff; border:1px solid rgba(255,255,255,0.06); padding:6px 8px; border-radius:8px; }
+
+    .response-container{
+      position:fixed; left:20px; right:20px; bottom:160px;
+      padding:12px;background:rgba(0,0,0,0.4);backdrop-filter:blur(10px);
+      border-radius:20px; max-height:calc(100vh - 220px); overflow-y:auto; -webkit-overflow-scrolling:touch; z-index:1;
+    }
+    .page{display:none; opacity:0; transition:opacity var(--med) ease-in-out}
+    .page.active{display:block; opacity:1}
+    .page.initial{text-align:center;font-size:1.1em}
+    .response-controls{display:flex;justify-content:space-between;align-items:center;margin-top:15px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.2)}
+    .control-buttons{display:flex;gap:10px;align-items:center}
+    .control-btn{background:rgba(255,255,255,0.05);padding:6px;border-radius:6px;cursor:pointer;transition:background var(--fast);display:flex;gap:6px;border:none;outline:none}
+    .control-btn:hover{background:rgba(255,255,255,0.12)}
+    .control-btn svg{stroke:rgba(255,255,255,0.5);fill:none}
+    .toggle-button svg{color:#fff;stroke:rgba(255,255,255,0.3);fill:none}
+    .toggle-button svg circle:nth-child(2){fill: currentColor}
+    .toggle-button.active svg{color:var(--success)}
+    .pagination{display:flex;align-items:center;gap:10px}
+    .pagination button{background:none;border:none;font-size:1.2em;color:#6fe4fb;cursor:pointer;transition:transform var(--fast)}
+    .pagination button:hover{transform:scale(1.2)}
+    
+    .response-block{
+      margin:1rem 0;padding:1.2rem;border-radius:12px;
+      animation:fadeIn var(--slow) ease forwards; transition:box-shadow var(--fast),transform var(--fast);
+      line-height:1.5;position:relative;cursor:pointer;overflow:hidden;animation:pulse 6s infinite ease-in-out;
+      background: linear-gradient(135deg, rgba(255,255,255,0.02), rgba(0,0,0,0.25));
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+    .response-block h3{margin-bottom:12px}
+    .response-block:hover{box-shadow:0 0 15px rgba(0,255,255,0.12)}
+    .response-block .meta { position:absolute; top:8px; right:8px; display:flex; gap:6px; z-index: 5; }
+    
+    .crystal-btn {
+      background: rgba(0,0,0,0.4); border-radius:6px; padding:4px 8px; cursor:pointer; border:1px solid rgba(255,255,255,0.1); color:var(--accent); font-size: 1.1em;
+      transition: all 0.3s;
+    }
+    .crystal-btn:hover { background: rgba(0,255,255,0.1); }
+    .crystal-btn.saved { color: var(--gold); border-color: var(--gold); cursor: default; background: rgba(255,215,0,0.06); }
+
+    .response-block.clicked{animation:clickPulse var(--med) ease-out}
+    .response-block.expanded{transform:scale(1.03); background:rgba(0,0,0,0.85); z-index:2; border:1px solid var(--accent)}
+    .intro{background:linear-gradient(135deg,rgba(0,255,255,0.08),rgba(0,100,100,0.04));border-left:4px solid #0ff}
+    .middle{background:linear-gradient(135deg,rgba(255,255,255,0.02),rgba(50,50,50,0.06));border-left:4px solid rgba(255,255,255,0.2)}
+    .ending{background:linear-gradient(135deg,rgba(255,0,255,0.06),rgba(100,0,100,0.04));border-left:4px solid #f0f}
+    .footer-text{margin-top:12px;font-size:0.8em;text-align:center;font-style:italic}
+
+    .input-container{position:fixed;left:20px;right:20px;bottom:90px;display:flex;gap:10px;z-index:2;max-width:calc(100% - 40px)}
+    .input-container input{flex:1;padding:10px;border:none;border-radius:20px;background:rgba(255,255,255,0.1);color:inherit;outline:none;font-size:16px;transition:background var(--fast)}
+    .input-container input:focus{background:rgba(255,255,255,0.2)}
+    .input-container button{width:60px;height:60px;border:none;border-radius:50%;background:linear-gradient(45deg,var(--primary),var(--secondary));color:#fff;font-size:1.5em;cursor:pointer;display:flex;justify-content:center;align-items:center;animation:pulse 2s infinite ease-in-out;transition:transform var(--fast)}
+    .input-container button:hover{transform:scale(1.1)}
+
+    /* Modals & Panels */
+    .modal, .panel { position: fixed; inset: 0; display: none; z-index: 9998; justify-content:center; align-items:center; backdrop-filter: blur(5px); background: rgba(0,0,0,0.6); }
+    .modal.active, .panel.active { display:flex }
+    .box {
+      background:#1a1a1a;padding:20px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);
+      width:90%;max-width:600px;box-shadow:0 8px 40px rgba(0,0,0,0.8); color:#fff;
+      max-height: 85vh; overflow-y: auto;
+    }
+    .box h3{color:var(--accent);margin-bottom:12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom:8px;}
+    .row{display:flex;gap:10px;align-items:center}
+    .col{display:flex;flex-direction:column;gap:8px}
+    .input-group label{font-size:0.85em;color:#aaa;margin-left:4px}
+    .input-group input[type="text"], .input-group input[type="password"], .input-group input[type="file"]{
+      width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.5);color:#fff;outline:none;
+    }
+    .settings-actions{display:flex;gap:10px;margin-top:12px; justify-content: flex-end;}
+    .btn{padding:8px 16px;border-radius:6px;border:none;cursor:pointer;font-weight:600;font-size:0.9em; transition:0.3s}
+    .btn-prim{background:var(--accent);color:#000}
+    .btn-prim:hover{box-shadow: 0 0 10px var(--accent)}
+    .btn-sec{background:rgba(255,255,255,0.1);color:#fff}
+    .btn-sec:hover{background:rgba(255,255,255,0.2)}
+    .btn-danger{background:rgba(255,50,50,0.2);color:#ffaaaa}
+    .btn-danger:hover{background:rgba(255,50,50,0.4)}
+    .small {font-size:0.85em;color:#bbb}
+
+    /* Training Library Styles */
+    .lib-list { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
+    .lib-item { 
+      background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; 
+      border-left: 3px solid transparent;
+    }
+    .lib-item.active-training { border-left-color: var(--success); background: rgba(0,255,0,0.05); }
+    .lib-item-info { display: flex; flex-direction: column; }
+    .lib-item-name { font-weight: bold; font-size: 0.95em; }
+    .lib-item-date { font-size: 0.75em; color: #777; }
+    .lib-actions { display: flex; gap: 6px; }
+
+    .crystal-list { max-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:8px }
+    .crystal-item { background: rgba(255,255,255,0.02); padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.05); }
+    .crystal-header { display: flex; justify-content: space-between; margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px; }
+    .crystal-content { font-size: 0.9em; color: #ddd; white-space: pre-wrap; max-height: 100px; overflow-y: auto; }
+
+    @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes clickPulse{0%,100%{opacity:1}50%{opacity:0.8}}
+    
+    @media (max-width:640px){
+      .box{max-width:95%}
+      .top-info { flex-direction: column; gap: 6px; align-items: flex-start; }
+      .svg-container{width:120px;height:120px}
+    }
+  </style>
+</head>
+<body>
+  <div id="particles-js"><canvas class="particles-js-canvas-el"></canvas></div>
+
+  <div class="svg-container">
+    <object data="3D_logo_Dual_Infodose_9.svg" type="image/svg+xml"></object>
+  </div>
+
+  <div class="top-info" id="topInfo">
+    <span id="displayUser">User: —</span>
+    <span id="displayInfodose">Infodose: —</span>
+    <span id="displayActiveTraining" style="color:var(--success); font-weight:bold; font-size:0.8em; margin-top:2px"></span>
+    <!-- Quick dropdown para alternar versões da biblioteca (one-click) -->
+    <label class="small" for="trainingQuickSelect" style="margin-left:6px">Treinos:</label>
+    <select id="trainingQuickSelect" title="Selecionar versão do treinamento rapidamente">
+      <option value="none">Nenhum</option>
+    </select>
+  </div>
+
+  <div class="response-container" id="response">
+    <div class="page initial active">
+      <strong>Clique no ◉ e diga “Oi, Dual”.</strong><br>
+      <em>Sempre único. Sempre seu.</em>
+    </div>
+
+    <div class="response-controls">
+      <div class="control-buttons">
+        <button class="control-btn copy-button" title="Copiar tudo">
+          <svg viewBox="0 0 24 24" width="20"><circle cx="12" cy="12" r="10"></circle><rect x="6" y="6" width="12" height="12"></rect></svg>
+        </button>
+        <button class="control-btn paste-button" title="Colar">
+          <svg viewBox="0 0 24 24" width="20"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="4" x2="12" y2="20"></line></svg>
+        </button>
+
+        <button id="toggleBtn" class="control-btn toggle-button" title="Painel Infodose & Biblioteca">
+          <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10" stroke-width="2"></circle><circle cx="12" cy="12" r="3"></circle></svg>
+        </button>
+
+        <button id="crystalBtn" class="control-btn" title="Cristalizados (Memória)">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 2l2.9 6.3L21 10l-5 3.6L17.8 21 12 17.7 6.2 21 7 13.6 2 10l6.1-1.7L12 2z"></path></svg>
+        </button>
+
+        <button id="settingsBtn" class="control-btn" title="Configurações API">
+          <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        </button>
+      </div>
+
+      <div class="pagination">
+        <button data-action="prev">⟵</button>
+        <span id="pageIndicator">1 / 1</span>
+        <button data-action="next">⟶</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-container">
+    <input id="userInput" type="text" placeholder="Diga: 'oi, Dual'...">
+    <button id="sendBtn" title="Enviar">➤</button>
+    <button id="voiceBtn" title="Falar">
+      <object data="Reset_buttom_Dual-Infodose.svg" type="image/svg+xml" width="36" height="36" style="pointer-events: none;"></object>
+    </button>
+  </div>
+
+  <div id="settingsModal" class="modal">
+    <div class="box">
+      <h3>Configuração Neural (API)</h3>
+      <div class="col">
+        <div class="input-group">
+          <label>OpenRouter API Key (SK)</label>
+          <input type="password" id="apiKeyInput" placeholder="sk-or-..." autocomplete="off">
+        </div>
+        <div class="input-group">
+          <label>Modelo AI</label>
+          <input type="text" id="modelInput" placeholder="ex: meta-llama/llama-4-maverick:free">
+        </div>
+        <div class="settings-actions">
+          <button id="cancelSettings" class="btn btn-sec">Cancelar</button>
+          <button id="saveSettings" class="btn btn-prim">Salvar Conexão</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="togglePanel" class="panel">
+    <div class="box">
+      <h3>Painel Infodose</h3>
+      
+      <div style="padding-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.1)">
+        <div class="row">
+          <div style="flex:1" class="col">
+            <label class="small">Usuário</label>
+            <input type="text" id="userNameInput" placeholder="Seu nome..." />
+          </div>
+          <div style="flex:1" class="col">
+            <label class="small">Nome da Infodose</label>
+            <input type="text" id="infodoseNameInput" placeholder="Ex: World System — Alpha" />
+          </div>
+        </div>
+        <div style="margin-top:10px; display:flex; gap:15px; align-items:center;">
+          <div style="display:flex;align-items:center;gap:6px">
+             <input type="checkbox" id="assistantActiveCheckbox" />
+             <label for="assistantActiveCheckbox" class="small">Infodose ativa</label>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+             <input type="checkbox" id="trainingActiveCheckbox" />
+             <label for="trainingActiveCheckbox" class="small">Treinamento ativo</label>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:15px;">
+        <h4 style="color:#ddd; margin-bottom:8px">Biblioteca de Treinamentos (World System)</h4>
+        
+        <div class="col" style="background:rgba(255,255,255,0.03); padding:10px; border-radius:8px">
+          <label class="small">Adicionar novo arquivo (.txt)</label>
+          <div style="display:flex; gap:8px">
+            <input type="file" id="trainingUpload" accept=".txt" style="flex:1" />
+            <button id="importTrainingBtn" class="btn btn-prim">Importar</button>
+          </div>
+        </div>
+
+        <div id="trainingLibList" class="lib-list">
+          <div class="small" style="text-align:center; padding:10px">Nenhum treinamento salvo.</div>
+        </div>
+      </div>
+
+      <div class="settings-actions">
+        <button id="savePanelBtn" class="btn btn-prim">Salvar & Fechar</button>
+        <button id="closePanelBtn" class="btn btn-sec">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="crystalModal" class="modal">
+    <div class="box">
+      <h3>Cristalizados (Memória Permanente)</h3>
+      <div class="row" style="margin-bottom:12px">
+        <button id="exportAllCrystal" class="btn btn-prim" style="flex:1">Exportar todos (.txt)</button>
+        <button id="clearAllCrystal" class="btn btn-danger" style="flex:1">Limpar tudo</button>
+      </div>
+      <div class="crystal-list" id="crystalList"></div>
+      <div class="settings-actions">
+        <button id="closeCrystal" class="btn btn-sec">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <script>
+    /* ---------- Constantes & Estado ---------- */
+    const TRAINING_FILE_DEFAULT_NAME = 'Super_Treinamento_Universal.txt';
+    const API_ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions';
+    const TEMPERATURE = 0.2;
+    
+    // Configs & Persistência
+    let apiKey = localStorage.getItem('di_apiKey') || '';
+    let modelName = localStorage.getItem('di_modelName') || 'meta-llama/llama-4-maverick:free';
+    let userName = localStorage.getItem('di_userName') || '';
+    let infodoseName = localStorage.getItem('di_infodoseName') || '';
+    
+    // Training State
+    let trainingText = localStorage.getItem('di_trainingText') || ''; // O texto ativo
+    let trainingActiveName = localStorage.getItem('di_trainingActiveName') || 'Nenhum'; // Nome do ativo
+    // Biblioteca: Array de {id, name, content, date}
+    let trainingLibrary = JSON.parse(localStorage.getItem('di_trainingLibrary') || '[]');
+
+    let assistantEnabled = (localStorage.getItem('di_assistantEnabled') === '1');
+    let trainingActive = (localStorage.getItem('di_trainingActive') !== '0'); // default true
+
+    let conversation = [];
+    let pages = [], currentPage = 0, autoAdvance = true;
+    const CRYSTAL_KEY = 'di_cristalizados';
+
+    /* ---------- Helpers ---------- */
+    const createEl = (tag, cls, html) => { 
+      const e = document.createElement(tag); 
+      if (cls) e.className = cls; 
+      if (html) e.innerHTML = html; 
+      return e; 
+    };
+
+    const normalizeText = (s) => {
+      if (!s) return '';
+      return s.replace(/\s+/g, ' ').trim().toLowerCase();
+    };
+    
+    // Split inteligente de texto em blocos de 3 parágrafos
+    const splitBlocks = text => {
+      if (!text || !text.trim()) return [['...','','']];
+      let paras = text.split(/\n\s*\n/).filter(p=>p.trim());
+      // fallback para textos sem quebras duplas
+      if (paras.length === 1 && text.length > 200) {
+        paras = text.match(/[^\.!\?]+[\.!\?]+/g) || [text];
+        paras = paras.map(s=>s.trim());
+      }
+      // Se não tiver divisível por 3, agrupa
+      const groups = [];
+      for (let i=0;i<paras.length;i+=3) {
+        let chunk = paras.slice(i, i+3);
+        while(chunk.length < 3) chunk.push('...'); // padding
+        groups.push(chunk);
+      }
+      return groups;
+    };
+
+    const speakText = (txt, onend)=> {
+      if (!txt) { if (onend) onend(); return; }
+      const u = new SpeechSynthesisUtterance(txt);
+      u.lang = 'pt-BR'; u.rate = 1.0; u.pitch = 1.05;
+      if (window._vozes) u.voice = window._vozes.find(v=>v.lang==='pt-BR') || window._vozes[0];
+      if (onend) u.onend = onend;
+      speechSynthesis.speak(u);
+    };
+
+    const updateTopInfo = () => {
+      document.getElementById('displayUser').innerText = 'User: ' + (userName || '—');
+      document.getElementById('displayInfodose').innerText = 'Infodose: ' + (infodoseName || '—');
+      const trDisplay = document.getElementById('displayActiveTraining');
+      if (trainingActive && trainingActiveName && trainingActiveName !== 'Nenhum') {
+         trDisplay.innerText = 'Treino: ' + trainingActiveName;
+         trDisplay.style.display = 'block';
+      } else {
+         trDisplay.style.display = 'none';
+      }
+    };
+
+    const updateToggleUI = () => {
+      document.getElementById('toggleBtn').classList.toggle('active', assistantEnabled);
+      // Update checkboxes if panel is open
+      const chkA = document.getElementById('assistantActiveCheckbox');
+      const chkT = document.getElementById('trainingActiveCheckbox');
+      if (chkA) chkA.checked = assistantEnabled;
+      if (chkT) chkT.checked = trainingActive;
+    };
+
+    /* ---------- Cristal helpers & sync visuals ---------- */
+    const getCrystalNormalizedList = () => {
+      const list = JSON.parse(localStorage.getItem(CRYSTAL_KEY) || '[]');
+      return list.map(i => normalizeText(i.content));
+    };
+
+    const isCrystalized = (text) => {
+      const norm = normalizeText(text);
+      return getCrystalNormalizedList().includes(norm);
+    };
+
+    // Atualiza visual dos botões cristalizar dentro da thread (usado após render e após mudanças)
+    const refreshThreadCrystalVisuals = () => {
+      const normList = getCrystalNormalizedList();
+      document.querySelectorAll('.response-block').forEach(b => {
+        const p = b.querySelector('p');
+        if (!p) return;
+        const txtNorm = normalizeText(p.innerText || '');
+        let btn = b.querySelector('.crystal-btn');
+        if (!btn) {
+          // cria botão se por algum motivo não existir
+          const meta = b.querySelector('.meta') || (() => {
+            const m = createEl('div','meta'); b.appendChild(m); return m;
+          })();
+          btn = createEl('button','crystal-btn','✶');
+          meta.appendChild(btn);
+        }
+        if (normList.includes(txtNorm)) {
+          btn.innerText = '✓';
+          btn.classList.add('saved');
+          btn.title = 'Já cristalizado';
+          btn.onclick = null;
+        } else {
+          btn.innerText = '✶';
+          btn.classList.remove('saved');
+          btn.title = 'Cristalizar essa mensagem';
+          // rebind onclick to a default handler that calls cristalizar and updates visuals
+          btn.onclick = (ev) => {
+            ev.stopPropagation();
+            cristalizar({ title: b.querySelector('h3')?.innerText || '—', content: p.innerText || '' });
+            refreshThreadCrystalVisuals();
+            renderCrystalList();
+          };
+        }
+      });
+    };
+
+    /* ---------- Renderização Principal (Com verificação de Cristalizado) ---------- */
+    const renderPaginatedResponse = text => {
+      speechSynthesis.cancel();
+      autoAdvance = true;
+      const respEl = document.getElementById('response');
+      respEl.querySelectorAll('.page:not(.initial)').forEach(p=>p.remove());
+      pages = [];
+      
+      const groups = splitBlocks(text);
+      const controls = respEl.querySelector('.response-controls');
+      const titles = ['🎁 Recompensa Inicial','👁️ Exploração e Curiosidade','⚡ Antecipação Vibracional'];
+
+      groups.forEach((tris, gi) => {
+        const page = createEl('div', gi===0?'page active':'page');
+        tris.forEach((body, j) => {
+          const cls = j===0?'intro': j===1?'middle':'ending';
+          const b = createEl('div','response-block '+cls);
+          
+          // Header + Content
+          b.innerHTML = `<h3>${titles[j]}</h3><p>${body}</p>`;
+          
+          // Meta: Cristalizar (criado aqui to keep consistent)
+          const meta = createEl('div','meta');
+          const crystalBtn = createEl('button','crystal-btn','✶');
+          
+          // Check state visualmente
+          if (isCrystalized(body)) {
+             crystalBtn.innerText = '✓';
+             crystalBtn.classList.add('saved');
+             crystalBtn.title = 'Já cristalizado';
+             crystalBtn.onclick = null;
+          } else {
+             crystalBtn.title = 'Cristalizar essa mensagem';
+             crystalBtn.onclick = (ev) => {
+               ev.stopPropagation();
+               cristalizar({ title: titles[j], content: body });
+               crystalBtn.innerText = '✓';
+               crystalBtn.classList.add('saved');
+               crystalBtn.onclick = null;
+               refreshThreadCrystalVisuals();
+               renderCrystalList();
+             };
+          }
+          meta.appendChild(crystalBtn);
+          b.appendChild(meta);
+
+          // Interaction
+          b.dataset.state = '';
+          b.addEventListener('click', (e) => {
+            if(e.target.closest('.meta')) return;
+            if (!b.dataset.state) {
+              speechSynthesis.cancel();
+              speakText(body);
+              b.classList.add('clicked');
+              b.dataset.state = 'spoken';
+            } else {
+              // Expandir -> Enviar como prompt
+              b.classList.add('expanded');
+              b.dataset.state = '';
+              
+              if (!assistantEnabled) {
+                assistantEnabled = true;
+                localStorage.setItem('di_assistantEnabled','1');
+                updateToggleUI();
+              }
+              
+              const blockText = `${titles[j]}\n\n${body}`;
+              showLoading('Pulso em Expansão...');
+              speechSynthesis.cancel();
+              speakText('Pulso em Expansão...');
+              
+              prepareConversation(); 
+              conversation.push({ role:'user', content: blockText });
+              callAI();
+            }
+          });
+          b.addEventListener('animationend', e => { if (e.animationName==='clickPulse') b.classList.remove('clicked'); });
+          page.appendChild(b);
+        });
+        
+        page.appendChild(createEl('p','footer-text',`<em>Do seu jeito. <strong>Sempre</strong> único. <strong>Sempre</strong> seu.</em>`));
+        respEl.insertBefore(page, controls);
+        pages.push(page);
+      });
+
+      currentPage = 0;
+      document.getElementById('pageIndicator').textContent = `1 / ${pages.length}`;
+      // garante sincronização visual após render
+      refreshThreadCrystalVisuals();
+      speakPage(0);
+    };
+
+    const speakPage = i => {
+      const page = pages[i];
+      if (!page) return;
+      const body = Array.from(page.querySelectorAll('.response-block p')).map(p=>p.innerText).join(' ');
+      speakText(body, () => {
+        if (!autoAdvance) return;
+        if (i < pages.length - 1) {
+          changePage(1);
+          speakPage(i+1);
+        } else {
+          speakText('Do seu jeito, sempre único, sempre seu.');
+        }
+      });
+    };
+
+    const changePage = offset => {
+      const np = currentPage + offset;
+      if (np<0||np>=pages.length) return;
+      pages[currentPage].classList.remove('active');
+      pages[np].classList.add('active');
+      currentPage = np;
+      document.getElementById('pageIndicator').textContent = `${currentPage+1} / ${pages.length}`;
+    };
+
+    const showLoading = msg => {
+      const respEl = document.getElementById('response');
+      const controls = respEl.querySelector('.response-controls');
+      respEl.querySelectorAll('.page:not(.initial)').forEach(p=>p.remove());
+      const page = createEl('div','page active');
+      page.appendChild(createEl('p','footer-text',msg));
+      respEl.insertBefore(page, controls);
+      pages = [page];
+      currentPage = 0;
+      document.getElementById('pageIndicator').textContent = '…';
+    };
+
+    /* ---------- Lógica AI ---------- */
+    const prepareConversation = () => {
+       conversation = conversation.filter(m => m.role !== 'system');
+       if (assistantEnabled && trainingActive && trainingText) {
+          conversation.unshift({ role: 'system', content: trainingText });
+       }
+    };
+
+    async function callAI() {
+      if (!apiKey) {
+        alert('Configure sua API Key primeiro.');
+        document.getElementById('settingsModal').classList.add('active');
+        return;
+      }
+
+      prepareConversation();
+
+      const bodyObj = { model: modelName, messages: conversation, temperature: TEMPERATURE };
+
+      try {
+        const resp = await fetch(API_ENDPOINT, {
+          method:'POST',
+          headers:{ 'Authorization':`Bearer ${apiKey}`, 'Content-Type':'application/json' },
+          body: JSON.stringify(bodyObj)
+        });
+        if (!resp.ok) throw new Error('Status: ' + resp.status);
+        const data = await resp.json();
+        const answer = data.choices?.[0]?.message?.content?.trim() || 'Resposta vazia.';
+        
+        conversation.push({ role:'assistant', content: answer });
+        renderPaginatedResponse(answer);
+      } catch (err) {
+        console.error(err);
+        const errorMsg = 'Oscilação no pulso (Erro API). Verifique conexão.';
+        conversation.push({ role:'assistant', content: errorMsg });
+        renderPaginatedResponse(errorMsg);
+      }
+    }
+
+    async function sendMessage(){
+      const respEl = document.getElementById('response');
+      const initPage = respEl.querySelector('.page.initial');
+      if (initPage) initPage.remove();
+
+      const input = document.getElementById('userInput');
+      const raw = input.value.trim();
+      if (!raw) return;
+      input.value = '';
+
+      speechSynthesis.cancel();
+      speakText('');
+
+      const txt = raw.toLowerCase();
+      if (txt.includes('oi dual')) {
+        assistantEnabled = true;
+        localStorage.setItem('di_assistantEnabled','1');
+        updateToggleUI();
+        showLoading('Dual Infodose ativa. Pulso enviado...');
+      } else {
+        showLoading('⚡Pulso enviado... Recebendo...');
+      }
+
+      conversation.push({ role:'user', content: raw });
+      callAI();
+    }
+
+    /* ---------- Gestão da Biblioteca de Treinos ---------- */
+    const renderTrainingLib = () => {
+      const el = document.getElementById('trainingLibList');
+      el.innerHTML = '';
+      if (trainingLibrary.length === 0) {
+        el.innerHTML = '<div class="small" style="text-align:center;padding:10px">Nenhum treinamento salvo.</div>';
+        populateTrainingDropdown();
+        return;
+      }
+
+      trainingLibrary.forEach(item => {
+        const row = createEl('div', 'lib-item');
+        if (item.name === trainingActiveName && trainingActive) {
+           row.classList.add('active-training');
+        }
+
+        const info = createEl('div','lib-item-info');
+        info.innerHTML = `<span class="lib-item-name">${item.name}</span><span class="lib-item-date">${new Date(item.date).toLocaleDateString()}</span>`;
+        
+        const actions = createEl('div','lib-actions');
+        
+        const btnActivate = createEl('button','btn btn-sec','Ativar');
+        if (item.name === trainingActiveName) {
+           btnActivate.classList.replace('btn-sec','btn-prim');
+           btnActivate.innerText = 'Ativo';
+        }
+        btnActivate.onclick = () => activateTraining(item.id);
+
+        const btnExport = createEl('button','btn btn-sec','⬇');
+        btnExport.title = "Baixar .txt";
+        btnExport.onclick = () => downloadTxt(item.name + '.txt', item.content);
+
+        const btnDel = createEl('button','btn btn-danger','X');
+        btnDel.onclick = () => deleteTraining(item.id);
+
+        actions.appendChild(btnActivate);
+        actions.appendChild(btnExport);
+        actions.appendChild(btnDel);
+        
+        row.appendChild(info);
+        row.appendChild(actions);
+        el.appendChild(row);
+      });
+
+      populateTrainingDropdown();
+    };
+
+    const activateTraining = (id) => {
+       const item = trainingLibrary.find(t => t.id === id);
+       if (!item) return;
+       trainingText = item.content;
+       trainingActiveName = item.name;
+       trainingActive = true;
+       localStorage.setItem('di_trainingText', trainingText);
+       localStorage.setItem('di_trainingActiveName', trainingActiveName);
+       localStorage.setItem('di_trainingActive', '1');
+       localStorage.setItem('di_trainingLibrary', JSON.stringify(trainingLibrary));
+       
+       renderTrainingLib();
+       updateTopInfo();
+       updateToggleUI();
+       populateTrainingDropdown();
+    };
+
+    const deleteTraining = (id) => {
+       if(!confirm('Excluir este treinamento da biblioteca?')) return;
+       trainingLibrary = trainingLibrary.filter(t => t.id !== id);
+       localStorage.setItem('di_trainingLibrary', JSON.stringify(trainingLibrary));
+       
+       const activeStillExists = trainingLibrary.find(t => t.name === trainingActiveName);
+       if (!activeStillExists && trainingLibrary.length > 0) {
+          activateTraining(trainingLibrary[0].id);
+       } else if (trainingLibrary.length === 0) {
+          trainingText = '';
+          trainingActiveName = 'Nenhum';
+          localStorage.setItem('di_trainingText','');
+          localStorage.setItem('di_trainingActiveName', 'Nenhum');
+          updateTopInfo();
+       }
+       renderTrainingLib();
+       populateTrainingDropdown();
+    };
+
+    const addTrainingToLib = (name, content) => {
+       const newItem = {
+          id: Date.now(),
+          name: name,
+          content: content,
+          date: new Date().toISOString()
+       };
+       trainingLibrary.push(newItem);
+       localStorage.setItem('di_trainingLibrary', JSON.stringify(trainingLibrary));
+       renderTrainingLib();
+       activateTraining(newItem.id);
+    };
+
+    // Preenche dropdown rápido com as versões (one-click)
+    const populateTrainingDropdown = () => {
+      const sel = document.getElementById('trainingQuickSelect');
+      if(!sel) return;
+      sel.innerHTML = '';
+      const noneOpt = document.createElement('option');
+      noneOpt.value = 'none';
+      noneOpt.innerText = 'Nenhum';
+      sel.appendChild(noneOpt);
+
+      if (trainingLibrary.length === 0) {
+        noneOpt.selected = true;
+        return;
+      }
+      trainingLibrary.forEach(item => {
+        const o = document.createElement('option');
+        o.value = String(item.id);
+        o.innerText = item.name;
+        if (item.name === trainingActiveName) o.selected = true;
+        sel.appendChild(o);
+      });
+    };
+
+    /* ---------- Gestão de Cristalizados ---------- */
+    const cristalizar = ({ title, content }) => {
+      const list = JSON.parse(localStorage.getItem(CRYSTAL_KEY) || '[]');
+      if (list.some(i => normalizeText(i.content) === normalizeText(content))) return;
+      const item = {
+        id: Date.now(),
+        title: title,
+        content: content,
+        user: userName || 'Anônimo',
+        infodose: infodoseName || 'Dual',
+        at: new Date().toISOString()
+      };
+      list.unshift(item);
+      localStorage.setItem(CRYSTAL_KEY, JSON.stringify(list));
+      // atualizar visuals
+      refreshThreadCrystalVisuals();
+    };
+
+    const renderCrystalList = () => {
+      const list = JSON.parse(localStorage.getItem(CRYSTAL_KEY) || '[]');
+      const el = document.getElementById('crystalList');
+      el.innerHTML = '';
+      
+      if (!list.length) {
+        el.innerHTML = '<div class="small" style="text-align:center">Memória vazia.</div>';
+        refreshThreadCrystalVisuals();
+        return;
+      }
+
+      list.forEach(it => {
+        const d = new Date(it.at);
+        const dateStr = `${d.getDate()}/${d.getMonth()+1} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+        
+        const card = createEl('div','crystal-item');
+        card.innerHTML = `
+          <div class="crystal-header">
+             <strong style="color:var(--accent)">${it.title}</strong>
+             <span class="small">${dateStr}</span>
+          </div>
+          <div class="crystal-content">${it.content}</div>
+          <div style="margin-top:8px; display:flex; gap:8px; justify-content:flex-end">
+             <button class="btn btn-sec" style="font-size:0.75em; padding:4px 8px">Copiar</button>
+             <button class="btn btn-sec" style="font-size:0.75em; padding:4px 8px">Baixar</button>
+             <button class="btn btn-danger" style="font-size:0.75em; padding:4px 8px">Apagar</button>
+          </div>
+        `;
+        // bind actions after added to DOM to avoid injection issues
+        el.appendChild(card);
+        const [btnCopy, btnDown, btnDel] = card.querySelectorAll('button');
+        btnCopy.onclick = () => navigator.clipboard.writeText(it.content);
+        btnDown.onclick = () => downloadTxt(`cristal_${it.id}.txt`, it.content);
+        btnDel.onclick = () => {
+          if(!confirm('Apagar este cristalizado?')) return;
+          let arr = JSON.parse(localStorage.getItem(CRYSTAL_KEY) || '[]').filter(x => x.id !== it.id);
+          localStorage.setItem(CRYSTAL_KEY, JSON.stringify(arr));
+          renderCrystalList();
+          refreshThreadCrystalVisuals();
+        };
+      });
+      refreshThreadCrystalVisuals();
+    };
+    
+    // Funções globais para onclick no HTML gerado
+    window.downloadTxt = (filename, text) => {
+       const blob = new Blob([text], { type:'text/plain;charset=utf-8' });
+       const url = URL.createObjectURL(blob);
+       const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
+    };
+
+    /* ---------- Inicialização e Eventos ---------- */
+    function setupUI() {
+       // Settings Modal
+       const sModal = document.getElementById('settingsModal');
+       document.getElementById('settingsBtn').onclick = () => {
+          document.getElementById('apiKeyInput').value = apiKey;
+          document.getElementById('modelInput').value = modelName;
+          sModal.classList.add('active');
+       };
+       document.getElementById('cancelSettings').onclick = () => sModal.classList.remove('active');
+       document.getElementById('saveSettings').onclick = () => {
+          apiKey = document.getElementById('apiKeyInput').value.trim();
+          modelName = document.getElementById('modelInput').value.trim() || modelName;
+          localStorage.setItem('di_apiKey', apiKey);
+          localStorage.setItem('di_modelName', modelName);
+          sModal.classList.remove('active');
+       };
+
+       // Toggle/Panel Modal
+       const pModal = document.getElementById('togglePanel');
+       document.getElementById('toggleBtn').onclick = () => {
+          document.getElementById('userNameInput').value = userName;
+          document.getElementById('infodoseNameInput').value = infodoseName;
+          document.getElementById('assistantActiveCheckbox').checked = assistantEnabled;
+          document.getElementById('trainingActiveCheckbox').checked = trainingActive;
+          renderTrainingLib();
+          pModal.classList.add('active');
+       };
+       document.getElementById('closePanelBtn').onclick = () => pModal.classList.remove('active');
+       document.getElementById('savePanelBtn').onclick = () => {
+          userName = document.getElementById('userNameInput').value.trim();
+          infodoseName = document.getElementById('infodoseNameInput').value.trim();
+          assistantEnabled = document.getElementById('assistantActiveCheckbox').checked;
+          trainingActive = document.getElementById('trainingActiveCheckbox').checked;
+          
+          localStorage.setItem('di_userName', userName);
+          localStorage.setItem('di_infodoseName', infodoseName);
+          localStorage.setItem('di_assistantEnabled', assistantEnabled?'1':'0');
+          localStorage.setItem('di_trainingActive', trainingActive?'1':'0');
+          
+          updateTopInfo();
+          updateToggleUI();
+          pModal.classList.remove('active');
+       };
+
+       // Crystal Modal
+       const cModal = document.getElementById('crystalModal');
+       document.getElementById('crystalBtn').onclick = () => {
+          renderCrystalList();
+          cModal.classList.add('active');
+       };
+       document.getElementById('closeCrystal').onclick = () => cModal.classList.remove('active');
+       
+       document.getElementById('clearAllCrystal').onclick = () => {
+          if(confirm('Tem certeza? Isso apaga todas as memórias salvas.')) {
+             localStorage.removeItem(CRYSTAL_KEY);
+             renderCrystalList();
+             // Atualiza visual na thread
+             refreshThreadCrystalVisuals();
+          }
+       };
+       document.getElementById('exportAllCrystal').onclick = () => {
+          const list = JSON.parse(localStorage.getItem(CRYSTAL_KEY) || '[]');
+          if(!list.length) return alert('Nada para exportar.');
+          const allTxt = list.map(i => `=== ${i.title} ===\nDATA: ${i.at}\nUSER: ${i.user}\nINFODOSE: ${i.infodose}\n\n${i.content}\n\n`).join('------------------\n\n');
+          downloadTxt(`Backup_Cristal_${Date.now()}.txt`, allTxt);
+       };
+
+       // Import Training Logic
+       document.getElementById('importTrainingBtn').onclick = () => {
+          const fileIn = document.getElementById('trainingUpload');
+          const file = fileIn.files[0];
+          if (!file) return alert('Selecione um arquivo .txt');
+          
+          const saveName = prompt('Dê um nome para esta versão do treinamento (ex: V1.0):', file.name);
+          if (!saveName) return;
+
+          const reader = new FileReader();
+          reader.onload = (e) => {
+             // reload library from storage in case changed
+             trainingLibrary = JSON.parse(localStorage.getItem('di_trainingLibrary') || '[]');
+             addTrainingToLib(saveName, e.target.result);
+             fileIn.value = ''; // reset
+             alert('Treinamento salvo na biblioteca e ativado!');
+          };
+          reader.readAsText(file);
+       };
+
+       // Quick dropdown change -> one-click activation
+       const quickSel = document.getElementById('trainingQuickSelect');
+       quickSel.addEventListener('change', (e) => {
+         const v = e.target.value;
+         if (v === 'none') {
+           trainingText = '';
+           trainingActiveName = 'Nenhum';
+           trainingActive = false;
+           localStorage.setItem('di_trainingText','');
+           localStorage.setItem('di_trainingActiveName','Nenhum');
+           localStorage.setItem('di_trainingActive','0');
+           updateTopInfo();
+           populateTrainingDropdown();
+           renderTrainingLib();
+           return;
+         }
+         const id = Number(v);
+         if (!isNaN(id)) activateTraining(id);
+       });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      speechSynthesis.onvoiceschanged = () => { window._vozes = speechSynthesis.getVoices(); };
+      
+      particlesJS('particles-js',{
+        particles:{ number:{value:40},color:{value:['#0ff','#f0f']}, shape:{type:'circle'},opacity:{value:0.4},size:{value:2.4}, move:{enable:true,speed:1.5} }, retina_detect:true
+      });
+
+      setupUI();
+      updateTopInfo();
+      updateToggleUI();
+      renderTrainingLib();
+      refreshThreadCrystalVisuals();
+
+      // Inputs Chat
+      document.getElementById('sendBtn').addEventListener('click', sendMessage);
+      document.getElementById('userInput').addEventListener('keypress', e => { if (e.key==='Enter') sendMessage(); });
+      document.querySelector('[data-action="prev"]').addEventListener('click', () => changePage(-1));
+      document.querySelector('[data-action="next"]').addEventListener('click', () => changePage(1));
+      
+      document.querySelector('.copy-button').addEventListener('click', () => {
+        const pages = Array.from(document.querySelectorAll('.response-container .page'));
+        const fullText = pages.map(p => p.innerText.trim()).join('\n\n');
+        navigator.clipboard.writeText(fullText);
+      });
+      document.querySelector('.paste-button').addEventListener('click', async () => {
+        try { document.getElementById('userInput').value = await navigator.clipboard.readText(); } catch (err) {}
+      });
+
+      // Voice
+      document.getElementById('voiceBtn').addEventListener('click', ()=>{
+        const R = new (window.SpeechRecognition||window.webkitSpeechRecognition)();
+        R.lang='pt-BR'; R.start();
+        R.onresult = e => {
+          document.getElementById('userInput').value = e.results[0][0].transcript;
+          sendMessage();
+        };
+      });
+    });
+  </script>
+</body>
+</html>
