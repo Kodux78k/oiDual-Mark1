@@ -1,0 +1,120 @@
+<div id="mantra-toggle">
+  <span id="mantra-text">Do seu jeito. <strong>Sempre</strong> único. <strong>Sempre</strong> seu.</span>
+</div>
+
+<style>
+  #mantra-toggle {
+    position: fixed !important;
+    bottom: 30px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 999999 !important; /* Garantir que fique acima de tudo */
+
+    background: rgba(10, 10, 10, 0.6) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+
+    padding: 12px 32px !important;
+    border-radius: 50px !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    
+    transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1) !important;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.4) !important;
+    min-width: 280px;
+    user-select: none;
+  }
+
+  #mantra-toggle:hover {
+    background: rgba(20, 20, 20, 0.8) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    transform: translateX(-50%) translateY(-3px) !important;
+  }
+
+  #mantra-text {
+    font-family: sans-serif !important;
+    color: #aaa !important;
+    font-size: 0.85rem !important;
+    letter-spacing: 0.5px !important;
+    white-space: nowrap !important;
+    transition: all 0.5s ease !important;
+  }
+
+  /* ESTADO ZEN ATIVADO */
+  #mantra-toggle.collapsed {
+    background: rgba(255, 215, 0, 0.03) !important;
+    border-color: rgba(255, 215, 0, 0.4) !important;
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.1) !important;
+    padding: 12px 50px !important;
+    animation: mantra-pulse 4s infinite ease-in-out !important;
+  }
+
+  #mantra-toggle.collapsed #mantra-text {
+    font-weight: 700 !important;
+    letter-spacing: 5px !important;
+    color: #ffd700 !important;
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.5) !important;
+    text-transform: uppercase !important;
+  }
+
+  @keyframes mantra-pulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.1); }
+    50% { box-shadow: 0 0 40px rgba(255, 215, 0, 0.2); border-color: rgba(255, 215, 0, 0.6); }
+  }
+
+  /* ANIMAÇÃO DE TROCA */
+  .fade-out { opacity: 0 !important; filter: blur(4px) !important; transform: scale(0.95) !important; }
+  .fade-in { opacity: 1 !important; filter: blur(0) !important; transform: scale(1) !important; }
+
+  /* ESCONDER INTERFACE ORIGINAL */
+  /* Adicione aqui as classes/IDs do site original que devem sumir */
+  body.zen-mode .response-container,
+  body.zen-mode .input-container,
+  body.zen-mode .top-info,
+  body.zen-mode header,
+  body.zen-mode footer:not(#mantra-toggle),
+  body.zen-mode main {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    filter: blur(20px) !important;
+    transition: all 1s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+</style>
+
+<script>
+  (function() {
+    const btn = document.getElementById('mantra-toggle');
+    const txt = document.getElementById('mantra-text');
+    
+    if (!btn || !txt) return;
+
+    const TXT_NORMAL = `Do seu jeito. <strong>Sempre</strong> único. <strong>Sempre</strong> seu.`;
+    const TXT_ZEN = `USE · TRANSFORME · DEVOLVA`;
+    let isZen = false;
+
+    btn.addEventListener('click', () => {
+      isZen = !isZen;
+
+      // Inicia fade out
+      txt.classList.add('fade-out');
+
+      setTimeout(() => {
+        // Aplica mudanças de estado
+        document.body.classList.toggle('zen-mode', isZen);
+        btn.classList.toggle('collapsed', isZen);
+        txt.innerHTML = isZen ? TXT_ZEN : TXT_NORMAL;
+
+        // Inicia fade in
+        txt.classList.remove('fade-out');
+        txt.classList.add('fade-in');
+
+        setTimeout(() => {
+          txt.classList.remove('fade-in');
+        }, 500);
+      }, 400);
+    });
+  })();
+</script>
