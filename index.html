@@ -5,17 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>dual.Infodose Chat Cinematográfico — v2 (cristalizar + painel toggle)</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&amp;display=swap" rel="stylesheet">
-  
-  <link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#001111">
-<link rel="apple-touch-icon" href="./icon-192.png">
-
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js')
-      .then(() => console.log('Service Worker Registered'));
-  }
-</script>
   <style>
     :root{
       --bg-dark: linear-gradient(to bottom,#000,#1a1a1a);
@@ -115,6 +104,77 @@
       .box{max-width:92%}
       .svg-container{width:120px;height:120px}
     }
+
+/* === MANTRA FOOTER / ZEN MODE === */
+#mantra-toggle {
+  position: fixed;
+  bottom: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+
+  background: rgba(15, 15, 15, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.06);
+
+  padding: 10px 24px;
+  border-radius: 100px;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 280px;
+}
+
+#mantra-toggle:hover {
+  background: rgba(25, 25, 25, 0.9);
+  border-color: rgba(255,255,255,0.15);
+  transform: translateX(-50%) translateY(-2px);
+}
+
+#mantra-text {
+  font-style: italic;
+  color: #777;
+  font-size: 0.78rem;
+  white-space: nowrap;
+  transition: all 0.4s ease;
+}
+
+/* Estado ZEN */
+#mantra-toggle.collapsed {
+  background: transparent;
+  border-color: rgba(255, 215, 0, 0.3);
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.05);
+  padding: 10px 40px;
+}
+
+#mantra-toggle.collapsed #mantra-text {
+  font-style: normal;
+  font-weight: 300;
+  letter-spacing: 3px;
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+}
+
+/* Fade */
+.fade-out { opacity: 0; transform: translateY(5px); }
+.fade-in { opacity: 1; transform: translateY(0); }
+
+/* Esconder UI no modo Zen */
+body.zen-mode .response-container,
+body.zen-mode .input-container,
+body.zen-mode .top-info,
+body.zen-mode .svg-container {
+  opacity: 0;
+  pointer-events: none;
+  filter: blur(12px);
+  transition: all 0.6s ease;
+}
+
   </style>
 </head>
 <body>
@@ -248,6 +308,13 @@
       </div>
     </div>
   </div>
+
+<!-- MANTRA FOOTER -->
+<div id="mantra-toggle">
+  <span id="mantra-text">
+    Do seu jeito. <strong>Sempre</strong> único. <strong>Sempre</strong> seu.
+  </span>
+</div>
 
   <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
   <script>
@@ -726,6 +793,39 @@
         };
       });
     });
+
+/* === MANTRA ZEN MODE === */
+const mantraBtn = document.getElementById('mantra-toggle');
+const mantraText = document.getElementById('mantra-text');
+
+let mantraCollapsed = false;
+
+const TXT_EXPANDED = `Do seu jeito. <strong>Sempre</strong> único. <strong>Sempre</strong> seu.`;
+const TXT_COLLAPSED = `USE · TRANSFORME · DEVOLVA`;
+
+function swapMantraText(html) {
+  mantraText.classList.add('fade-out');
+  setTimeout(() => {
+    mantraText.innerHTML = html;
+    mantraText.classList.remove('fade-out');
+    mantraText.classList.add('fade-in');
+    setTimeout(() => mantraText.classList.remove('fade-in'), 300);
+  }, 300);
+}
+
+mantraBtn.addEventListener('click', () => {
+  mantraCollapsed = !mantraCollapsed;
+
+  if (mantraCollapsed) {
+    mantraBtn.classList.add('collapsed');
+    document.body.classList.add('zen-mode');
+    swapMantraText(TXT_COLLAPSED);
+  } else {
+    mantraBtn.classList.remove('collapsed');
+    document.body.classList.remove('zen-mode');
+    swapMantraText(TXT_EXPANDED);
+  }
+});
 
   </script>
 </body>
